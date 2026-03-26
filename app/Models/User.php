@@ -49,4 +49,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(NutritionistProfile::class);
     }
+
+    public function patientProfile(): HasOne
+    {
+        return $this->hasOne(PatientProfile::class);
+    }
 }

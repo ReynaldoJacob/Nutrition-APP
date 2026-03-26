@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PatientController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas de autenticación (solo para invitados)
@@ -14,7 +15,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 
 // Rutas protegidas (requieren autenticación)
 Route::middleware('auth')->group(function () {
-    Route::get('/', fn() => \Inertia\Inertia::render('Dashboard'))->name('dashboard');
-    Route::get('/pacientes', fn() => \Inertia\Inertia::render('Patients'))->name('pacientes');
+    Route::get('/', function () {
+        $total = \App\Models\PatientProfile::where('nutritionist_id', auth()->id())->count();
+        return \Inertia\Inertia::render('Dashboard', ['totalPatients' => $total]);
+    })->name('dashboard');
+    Route::get('/pacientes', [PatientController::class, 'index'])->name('pacientes');
     Route::get('/pacientes/{id}', fn($id) => \Inertia\Inertia::render('PatientRecord', ['patientId' => $id]))->name('pacientes.show');
 });

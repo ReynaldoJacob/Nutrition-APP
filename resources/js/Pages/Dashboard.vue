@@ -24,7 +24,7 @@
                 <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4 border-primary">
                     <p class="text-on-surface-variant text-sm font-semibold">Total Pacientes</p>
                     <div class="flex items-center justify-between mt-2">
-                        <span class="text-3xl font-extrabold font-headline">128</span>
+                        <span class="text-3xl font-extrabold font-headline">{{ totalPatients }}</span>
                         <span class="text-primary text-xs font-bold bg-primary-container px-2 py-1 rounded-full">+12%</span>
                     </div>
                 </div>
@@ -202,6 +202,10 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+
+const props = defineProps({
+    totalPatients: { type: Number, default: 0 },
+});
 
 const messages = ref([]);
 let channel = null;

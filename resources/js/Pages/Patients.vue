@@ -62,7 +62,7 @@
                 <div class="md:col-span-4 bg-primary-container rounded-xl p-6 flex items-center justify-between border-l-4 border-primary">
                     <div>
                         <p class="text-on-primary-container text-xs font-bold uppercase tracking-widest opacity-80">Pacientes Totales</p>
-                        <p class="text-3xl font-extrabold text-on-primary-container font-headline">1,284</p>
+                        <p class="text-3xl font-extrabold text-on-primary-container font-headline">{{ patients.length }}</p>
                     </div>
                     <div class="bg-white/40 p-3 rounded-full">
                         <span class="material-symbols-outlined text-primary" style="font-size:30px">groups</span>
@@ -86,14 +86,14 @@
                     <tbody>
                         <tr
                             v-for="patient in filteredPatients"
-                            :key="patient.id"
+                            :key="patient.profileId"
                             class="border-t border-surface-container-high hover:bg-surface-bright transition-colors"
                         >
                             <td class="px-8 py-5">
                                 <div class="flex items-center gap-4">
                                     <img
                                         :alt="'Retrato de ' + patient.name"
-                                        :src="patient.avatar"
+                                        :src="patient.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name)}&background=7af9c7&color=004933`"
                                         class="w-10 h-10 rounded-full object-cover shrink-0"
                                     />
                                     <div>
@@ -131,7 +131,7 @@
                 <!-- Pagination -->
                 <div class="px-8 py-5 border-t border-surface-container-high flex items-center justify-between">
                     <p class="text-xs font-medium text-on-surface-variant">
-                        Mostrando {{ filteredPatients.length }} de 1,284 pacientes
+                        Mostrando {{ filteredPatients.length }} de {{ patients.length }} pacientes
                     </p>
                     <div class="flex items-center gap-2">
                         <button
@@ -173,10 +173,16 @@
 import { ref, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
+const props = defineProps({
+    patients: {
+        type: Array,
+        default: () => [],
+    },
+});
+
 const filterStatus = ref('');
 const filterDate   = ref('');
 const currentPage  = ref(1);
-const totalPages   = 321;
 
 const goalClasses = {
     'Pérdida de Peso': 'bg-secondary-container text-on-secondary-container',
@@ -189,58 +195,18 @@ function goalClass(goal) {
     return goalClasses[goal] ?? 'bg-surface-container-high text-on-surface-variant';
 }
 
-const patients = [
-    {
-        id: '#CS-2045',
-        name: 'Sofía Alarcón',
-        email: 'sofia.al@email.com',
-        lastVisit: '12 Oct, 2023',
-        daysAgo: 'Hace 2 días',
-        goal: 'Pérdida de Peso',
-        status: 'Activo',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCTJo20gRtiwXySNrc8AYIs03A31RosBUz6_zySOrxNvfqEZ1zIY3NHxvKrf5T1vg5ZmXteh3d2DbhQI14ZXL-If9T9vMvlclcfPZ1zM_bFRBo5ewBQHL7tCXt3yTQrfO_KkjCRl6YN0ERVHvIMJk0J4ZsTGOIW3aIkaHBAxdS-5xgIVTlvC9lLcbr1P5f6hXZPz74oXYN2t4T2tWOJEm6ZjNUqdXteQiRwedvXBfWkCMPUldjmOwh-7ViDGRHYEu8SuLq37UVNRBGg',
-    },
-    {
-        id: '#CS-1982',
-        name: 'Roberto Méndez',
-        email: 'r.mendez@servicios.mx',
-        lastVisit: '05 Oct, 2023',
-        daysAgo: 'Hace 9 días',
-        goal: 'Hipertrofia',
-        status: 'Activo',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDyUbUY5ZhOYqJBksnU_u0Kry60AQ7XHtG6Vd-TsFEdu5lGImGU0MA7n8zuW3rO7WJoomN9Ez4UetL_9TZwTGpEgIfs_6lEKUbEOQC-BZ7_cN9eLhPshcE_GrTsMb4W70E5RV2ZdZU8DUXH6sveTyBDs0ITdOa3e8S9g5WqHOYB-bXeQXOLNB_-_u3jk4y8nojjk9tQSVbp67aoJLcbeN4U0wPgS8js5owzE-ILajei3mQkvOOO72iCevCg9M9-Kgkgs6jppYimz1f3',
-    },
-    {
-        id: '#CS-2101',
-        name: 'Elena Rivas',
-        email: 'elena_r88@cloud.com',
-        lastVisit: '28 Sep, 2023',
-        daysAgo: 'Hace 16 días',
-        goal: 'Mantenimiento',
-        status: 'Inactivo',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBk5VZaBWXYbmbRkvUYs3BTJXwOOz5YXMzdecmsGG_72hBj7NSWsBSr5u59SjBymfMbgHLp6xWSZyuztnGwXLBow9LYG9Vy0BzilPl8kIyaQXbZjNXwywnzymeu8ilKa1rvLHJhV_v_7uhxvvS1rKST0S51xQWSOgUl5mdwqlHarotcijRcbS3oi2fnKooEuhBiawTrNzsUyz9UrAGRLs9YuWiuz0T80HcX9TPD1Ut8yQ7IB4J3Sx6CULDsbcqP-zOloVV1NvWKxwyJ',
-    },
-    {
-        id: '#CS-1855',
-        name: 'Carlos Fuentes',
-        email: 'fuentes.carlos@pro.com',
-        lastVisit: '15 Sep, 2023',
-        daysAgo: 'Hace 1 mes',
-        goal: 'Diabetes Tipo II',
-        status: 'Activo',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAOMuKnBBlX99-gYbfD4gvEfSoSoTmkClIWepqQrVqOcKNPgWJvLXV7OfR_RhA8bxAt5d7MJt4zybp1Mp7Vlacx1zXF_YlcUpdARBRU5JBuughK5h231_-EJuwCHyhKsYQdwNfWP4mfMEsrcW5fXc-KKPTdVTJzsQrAxyaCPV4zCJ7_zaCc9PkMqckg35hHLeGeMZjX32whMg1VphHzUKDIDNwMaXfy9G9l7k6kaDmq2hz0embwJcYsY34Eqb46K6FtXqmZghPsBdV7',
-    },
-];
-
 const filteredPatients = computed(() => {
-    return patients.filter(p => {
+    return props.patients.filter(p => {
         if (filterStatus.value && p.status !== filterStatus.value) return false;
         return true;
     });
 });
 
+const totalPages = computed(() => Math.max(1, Math.ceil(props.patients.length / 10)));
+
 const visiblePages = computed(() => {
-    return [1, 2, 3, '...', totalPages];
+    if (totalPages.value <= 5) return Array.from({ length: totalPages.value }, (_, i) => i + 1);
+    return [1, 2, 3, '...', totalPages.value];
 });
 
 function clearFilters() {
