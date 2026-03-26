@@ -19,6 +19,7 @@ class PatientProfile extends Model
         'initial_weight',
         'activity_level',
         'nutrition_goal',
+        'notes',
         'medical_conditions',
         'allergies',
         'medications',

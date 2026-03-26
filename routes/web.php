@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('dashboard');
     Route::get('/pacientes', [PatientController::class, 'index'])->name('pacientes');
+    Route::post('/pacientes', [PatientController::class, 'store'])->name('pacientes.store');
     Route::get('/pacientes/{id}', fn($id) => \Inertia\Inertia::render('PatientRecord', ['patientId' => $id]))->name('pacientes.show');
 
     Route::get('/calendario', function () {

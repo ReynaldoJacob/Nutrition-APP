@@ -13,7 +13,10 @@
                     <h1 class="text-4xl font-extrabold text-on-surface tracking-tight font-headline">Gestión de Pacientes</h1>
                     <p class="text-on-surface-variant mt-1 font-body">Supervisa y organiza el progreso de tus pacientes activos e históricos.</p>
                 </div>
-                <button class="self-start shrink-0 bg-primary text-on-primary px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg hover:opacity-90 transition-opacity active:scale-95">
+                <button
+                    class="self-start shrink-0 bg-primary text-on-primary px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg hover:opacity-90 transition-opacity active:scale-95"
+                    @click="showNewPatientModal = true"
+                >
                     <span class="material-symbols-outlined">person_add</span>
                     Añadir Nuevo Paciente
                 </button>
@@ -163,15 +166,27 @@
         </main>
 
         <!-- FAB Mobile -->
-        <button class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center z-50">
+        <button
+            class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center z-50"
+            @click="showNewPatientModal = true"
+        >
             <span class="material-symbols-outlined">add</span>
         </button>
+
+        <!-- Modal Nuevo Paciente -->
+        <NewPatientModal
+            :show="showNewPatientModal"
+            @close="showNewPatientModal = false"
+            @saved="onPatientSaved"
+        />
     </AppLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
+import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import NewPatientModal from '@/Components/NewPatientModal.vue';
 
 const props = defineProps({
     patients: {
@@ -180,9 +195,14 @@ const props = defineProps({
     },
 });
 
-const filterStatus = ref('');
-const filterDate   = ref('');
-const currentPage  = ref(1);
+const filterStatus        = ref('');
+const filterDate          = ref('');
+const currentPage         = ref(1);
+const showNewPatientModal = ref(false);
+
+function onPatientSaved() {
+    router.reload();
+}
 
 const goalClasses = {
     'Pérdida de Peso': 'bg-secondary-container text-on-secondary-container',
