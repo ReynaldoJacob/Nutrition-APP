@@ -6,7 +6,7 @@ echo "DB_HOST:     ${DB_HOST}"
 echo "DB_PORT:     ${DB_PORT}"
 echo "DB_DATABASE: ${DB_DATABASE}"
 echo "DB_USERNAME: ${DB_USERNAME}"
-echo "DB_PASSWORD: ${DB_PASSWORD:0:3}***"
+echo "DB_PASSWORD set: $([ -n "$DB_PASSWORD" ] && echo 'SI' || echo 'NO')"
 echo "APP_KEY set: $([ -n "$APP_KEY" ] && echo 'SI' || echo 'NO')"
 echo "==============================="
 

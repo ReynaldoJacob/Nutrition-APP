@@ -39,4 +39,4 @@ RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 8000
 
-CMD ["sh", "start.sh"]
+CMD ["bash", "start.sh"]
