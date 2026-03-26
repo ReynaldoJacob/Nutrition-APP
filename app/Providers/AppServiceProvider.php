@@ -17,7 +17,10 @@ class AppServiceProvider extends ServiceProvider
     {
         Carbon::setLocale('es');
 
-        if (config('app.env') === 'production') {
+        if (
+            config('app.env') === 'production' ||
+            request()->server('HTTP_X_FORWARDED_PROTO') === 'https'
+        ) {
             URL::forceScheme('https');
         }
     }
