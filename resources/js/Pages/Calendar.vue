@@ -236,15 +236,15 @@ const showModal = ref(false);
 
 // ─── Grilla ──────────────────────────────────────────────────────────────────
 // Horas visibles 08:00 → 18:00
-const START_HOUR   = 8;
-const END_HOUR     = 18;
+const START_HOUR   = 0;
+const END_HOUR     = 24;
 const SLOT_PX      = 80; // px por hora
 
 const timeSlots = computed(() => {
     const slots = [];
     for (let h = START_HOUR; h < END_HOUR; h++) {
-        const suffix = h < 12 ? 'AM' : 'PM';
-        const display = h <= 12 ? h : h - 12;
+        const suffix  = h < 12 ? 'AM' : 'PM';
+        const display = h === 0 ? 12 : h <= 12 ? h : h - 12;
         slots.push(`${String(display).padStart(2, '0')}:00 ${suffix}`);
     }
     return slots;
