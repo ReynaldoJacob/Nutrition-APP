@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             NutritionistSeeder::class,
             PatientSeeder::class,
+            AppointmentSeeder::class,
         ]);
     }
 }

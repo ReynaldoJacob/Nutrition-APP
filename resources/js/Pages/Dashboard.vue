@@ -6,7 +6,7 @@
             <div class="flex justify-between items-end">
                 <div class="space-y-2">
                     <h1 class="text-4xl font-extrabold font-headline tracking-tight text-on-surface">Bienvenido, {{ authUser?.first_name }}</h1>
-                    <p class="text-on-surface-variant font-body">Tienes 4 citas pendientes para el día de hoy.</p>
+                    <p class="text-on-surface-variant font-body">Tienes {{ todayAppointments.length }} citas pendientes para el día de hoy.</p>
                 </div>
                 <div class="bg-primary-container px-6 py-4 rounded-xl flex items-center gap-4">
                     <div class="bg-primary p-2 rounded-lg">
@@ -61,56 +61,37 @@
                         <button class="text-primary font-bold text-sm hover:underline">Ver calendario completo</button>
                     </div>
                     <div class="space-y-4">
-                        <!-- Card 1 -->
-                        <div class="bg-surface-container-lowest p-5 rounded-xl flex items-center justify-between hover:bg-surface-container-low transition-colors group">
-                            <div class="flex items-center gap-5">
-                                <div class="w-14 h-14 bg-secondary-container rounded-full overflow-hidden">
-                                    <img alt="Paciente" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3qgQsn-12D5dyUhV1eMCUtv51-5T8p8De7nBZDETKTCsXd1pmlu0SrbSSTi51GDpiglgYeLZETRrPqJk7GdEKfAKeS91t5AYtmA9FoYXcsNxj3T5FbH89nMwMceyjG_FNIfJJcZWQCXRXrbGU-iFUqyFHMTYLMgZz-XocRRIm6DppiU46RsKrPL4Io6k4ncxu1QmSFL1zKAxDaiiLTLw8s3monH6cU_zvP7g-VoTpUvQ_t6GKK4-ES_jVwGy7G8z7VWqlpu8KaDi7"/>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg font-headline">Lucía Martínez</h3>
-                                    <p class="text-on-surface-variant text-sm">Control de Diabetes Tipo II</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-6">
-                                <div class="px-3 py-1 bg-surface-container-high rounded-lg">
-                                    <p class="text-sm font-bold text-on-surface">09:00 AM</p>
-                                </div>
-                                <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">arrow_forward_ios</span>
-                            </div>
+                        <!-- Estado vacío -->
+                        <div
+                            v-if="todayAppointments.length === 0"
+                            class="text-center py-12 text-on-surface-variant"
+                        >
+                            <span class="material-symbols-outlined text-4xl mb-2 block">event_available</span>
+                            <p class="text-sm font-medium">No tienes citas programadas para hoy.</p>
                         </div>
-                        <!-- Card 2 -->
-                        <div class="bg-surface-container-lowest p-5 rounded-xl flex items-center justify-between hover:bg-surface-container-low transition-colors group">
+
+                        <!-- Card dinámica -->
+                        <div
+                            v-for="appt in todayAppointments"
+                            :key="appt.id"
+                            class="bg-surface-container-lowest p-5 rounded-xl flex items-center justify-between hover:bg-surface-container-low transition-colors group"
+                        >
                             <div class="flex items-center gap-5">
-                                <div class="w-14 h-14 bg-primary-container rounded-full overflow-hidden">
-                                    <img alt="Paciente" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVDWzfjOLinVzzcDWCXeL1uodAKgODgRw36mCV7IBmccXJ5TwvdY3YbhXYNMAUh8l9L8ay6YtThra-uSRwJQVv7gWhyIbYTcf_McwMlV8jKnSQPvWnSht8Z2N1DzLVoMbMvaJ475P9E4Yjm19RBgEHFSvGsievbPOLxuQ_1R4hD-POK9UtAa0XIHVGgqFATedYCM8zh_rmBR08-1CEANTwRc6jgFOQ7fqe7nByxypUkL1Mpr78L6fRdJ39YW0_8V5sLKVezUfny_06"/>
+                                <div class="w-14 h-14 bg-secondary-container rounded-full overflow-hidden shrink-0">
+                                    <img
+                                        :alt="appt.patientName"
+                                        :src="appt.patientAvatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(appt.patientName)}&background=7af9c7&color=004933`"
+                                        class="w-full h-full object-cover"
+                                    />
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-lg font-headline">Carlos Ruiz</h3>
-                                    <p class="text-on-surface-variant text-sm">Rendimiento Deportivo</p>
+                                    <h3 class="font-bold text-lg font-headline">{{ appt.patientName }}</h3>
+                                    <p class="text-on-surface-variant text-sm">{{ appt.type }}</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-6">
                                 <div class="px-3 py-1 bg-surface-container-high rounded-lg">
-                                    <p class="text-sm font-bold text-on-surface">11:30 AM</p>
-                                </div>
-                                <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">arrow_forward_ios</span>
-                            </div>
-                        </div>
-                        <!-- Card 3 -->
-                        <div class="bg-surface-container-lowest p-5 rounded-xl flex items-center justify-between hover:bg-surface-container-low transition-colors group">
-                            <div class="flex items-center gap-5">
-                                <div class="w-14 h-14 bg-secondary-container rounded-full overflow-hidden">
-                                    <img alt="Paciente" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASge0VbE7HfHHr4hztUBqP-3bGy8lP89Kgw7oBYQWCXEhWZnRhLHVxrSzLNcYXcXpzTAEYWEIzoGD9zFPyPUZVLRZQUGmh7EgEGPP8hwBweB2F6jQiEaqef9zpomsnV4XLDpL2lGgSXL3tjkLDx_h2fA_tZsfxGMt1qrYaCmRLCPROMkp6YuZuMLuwVFD00rQc7CCaimFJz-P72dx4-MdXyidRr30pcaPe-W4l1Yo3EsZ3uwu9B-K3NuiC374K1ZMnhkllxJP7XFGJ"/>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg font-headline">Elena Vargas</h3>
-                                    <p class="text-on-surface-variant text-sm">Alergias Alimentarias</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-6">
-                                <div class="px-3 py-1 bg-surface-container-high rounded-lg">
-                                    <p class="text-sm font-bold text-on-surface">04:00 PM</p>
+                                    <p class="text-sm font-bold text-on-surface">{{ appt.time }}</p>
                                 </div>
                                 <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">arrow_forward_ios</span>
                             </div>
@@ -204,7 +185,8 @@ import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
-    totalPatients: { type: Number, default: 0 },
+    totalPatients:     { type: Number, default: 0 },
+    todayAppointments: { type: Array,  default: () => [] },
 });
 
 const messages = ref([]);

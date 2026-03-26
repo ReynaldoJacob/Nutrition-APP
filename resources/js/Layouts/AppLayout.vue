@@ -45,9 +45,9 @@
         </aside>
 
         <!-- Main Content Area -->
-        <main class="ml-64 min-h-screen">
+        <main class="ml-64 h-screen flex flex-col">
             <!-- Top Header -->
-            <header class="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md flex justify-between items-center px-8 py-3 border-b border-slate-100 shadow-sm">
+            <header class="shrink-0 z-40 w-full bg-white/80 backdrop-blur-md flex justify-between items-center px-8 py-3 border-b border-slate-100 shadow-sm">
                 <div class="flex items-center bg-surface-container-high rounded-full px-4 py-2 w-96 gap-2">
                     <span class="material-symbols-outlined text-on-surface-variant" style="font-size:18px">search</span>
                     <input
@@ -70,7 +70,9 @@
             </header>
 
             <!-- Page Slot -->
-            <slot />
+            <div class="flex-1 overflow-y-auto flex flex-col">
+                <slot />
+            </div>
         </main>
 
         <!-- FAB -->
