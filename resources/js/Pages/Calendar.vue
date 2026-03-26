@@ -189,7 +189,9 @@
                                 <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary mb-2">edit</span>
                                 <span class="text-[10px] font-bold">Reprogramar</span>
                             </button>
-                            <button class="flex flex-col items-center justify-center p-4 rounded-2xl bg-surface-container-low hover:bg-error-container/20 transition-colors group">
+                            <button
+                                @click="showCancelModal = true"
+                                class="flex flex-col items-center justify-center p-4 rounded-2xl bg-surface-container-low hover:bg-error-container/20 transition-colors group">
                                 <span class="material-symbols-outlined text-on-surface-variant group-hover:text-error mb-2">cancel</span>
                                 <span class="text-[10px] font-bold">Cancelar</span>
                             </button>
@@ -211,6 +213,13 @@
             :patients="patients"
             @close="showModal = false"
         />
+
+        <CancelConfirmModal
+            :show="showCancelModal"
+            :appointment="selected"
+            @close="showCancelModal = false"
+            @cancelled="onCancelled"
+        />
     </AppLayout>
 </template>
 
@@ -219,6 +228,7 @@ import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import NewAppointmentModal from '@/Components/NewAppointmentModal.vue';
+import CancelConfirmModal from '@/Components/CancelConfirmModal.vue';
 
 const props = defineProps({
     appointments: { type: Array,  default: () => [] },
@@ -231,8 +241,14 @@ const props = defineProps({
 });
 
 // ─── Estado ──────────────────────────────────────────────────────────────────
-const selected  = ref(null);
-const showModal = ref(false);
+const selected        = ref(null);
+const showModal       = ref(false);
+const showCancelModal = ref(false);
+
+function onCancelled() {
+    selected.value = null;
+    router.reload({ preserveScroll: true });
+}
 
 // ─── Grilla ──────────────────────────────────────────────────────────────────
 // Horas visibles 08:00 → 18:00

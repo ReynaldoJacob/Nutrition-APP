@@ -112,4 +112,5 @@ Route::middleware('auth')->group(function () {
     })->name('calendario');
 
     Route::post('/citas', [AppointmentController::class, 'store'])->name('citas.store');
+    Route::patch('/citas/{appointment}/cancelar', [AppointmentController::class, 'cancel'])->name('citas.cancel');
 });
