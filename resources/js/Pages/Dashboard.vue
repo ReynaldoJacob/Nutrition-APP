@@ -8,13 +8,22 @@
                     <h1 class="text-4xl font-extrabold font-headline tracking-tight text-on-surface">Bienvenido, {{ authUser?.first_name }}</h1>
                     <p class="text-on-surface-variant font-body">Tienes {{ todayAppointments.length }} citas pendientes para el día de hoy.</p>
                 </div>
-                <div class="bg-primary-container px-6 py-4 rounded-xl flex items-center gap-4">
-                    <div class="bg-primary p-2 rounded-lg">
-                        <span class="material-symbols-outlined text-white">calendar_month</span>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-on-primary-container uppercase tracking-wider">Hoy es</p>
-                        <p class="text-on-primary-container font-headline font-bold">{{ today }}</p>
+                <div class="flex items-center gap-4">
+                    <button
+                        @click="showModal = true"
+                        class="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all"
+                    >
+                        <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">add</span>
+                        Nueva Cita
+                    </button>
+                    <div class="bg-primary-container px-6 py-4 rounded-xl flex items-center gap-4">
+                        <div class="bg-primary p-2 rounded-lg">
+                            <span class="material-symbols-outlined text-white">calendar_month</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-on-primary-container uppercase tracking-wider">Hoy es</p>
+                            <p class="text-on-primary-container font-headline font-bold">{{ today }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -176,6 +185,12 @@
 
             </div>
         </section>
+
+        <NewAppointmentModal
+            :show="showModal"
+            :patients="patients"
+            @close="showModal = false"
+        />
     </AppLayout>
 </template>
 
@@ -183,11 +198,15 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import NewAppointmentModal from '@/Components/NewAppointmentModal.vue';
 
 const props = defineProps({
     totalPatients:     { type: Number, default: 0 },
     todayAppointments: { type: Array,  default: () => [] },
+    patients:          { type: Array,  default: () => [] },
 });
+
+const showModal = ref(false);
 
 const messages = ref([]);
 let channel = null;

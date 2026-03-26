@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use App\Models\Appointment;
+use App\Models\PatientProfile;
 use Illuminate\Support\Facades\Route;
 
 // Rutas de autenticación (solo para invitados)
@@ -37,9 +39,19 @@ Route::middleware('auth')->group(function () {
                 'status'      => $a->status,
             ]);
 
+        $patients = PatientProfile::with('user')
+            ->where('nutritionist_id', $nutritionistId)
+            ->get()
+            ->map(fn($p) => [
+                'id'     => $p->id,
+                'userId' => $p->user_id,
+                'name'   => $p->user->full_name,
+            ]);
+
         return \Inertia\Inertia::render('Dashboard', [
-            'totalPatients'      => $total,
-            'todayAppointments'  => $todayAppointments,
+            'totalPatients'     => $total,
+            'todayAppointments' => $todayAppointments,
+            'patients'          => $patients,
         ]);
     })->name('dashboard');
     Route::get('/pacientes', [PatientController::class, 'index'])->name('pacientes');
@@ -79,6 +91,15 @@ Route::middleware('auth')->group(function () {
                 'timeRange'     => $a->scheduled_at->format('h:i A') . ' - ' . $a->scheduled_at->addMinutes($a->duration)->format('h:i A'),
             ]);
 
+        $patients = PatientProfile::with('user')
+            ->where('nutritionist_id', $nutritionistId)
+            ->get()
+            ->map(fn($p) => [
+                'id'     => $p->id,
+                'userId' => $p->user_id,
+                'name'   => $p->user->full_name,
+            ]);
+
         return \Inertia\Inertia::render('Calendar', [
             'appointments' => $appointments,
             'weekStart'    => $weekStart->toDateString(),
@@ -86,6 +107,9 @@ Route::middleware('auth')->group(function () {
             'weekLabel'    => 'Semana del ' . $weekStart->translatedFormat('d') . ' al ' . $weekEnd->translatedFormat('d \d\e F'),
             'monthLabel'   => ucfirst($weekStart->translatedFormat('F Y')),
             'today'        => now()->toDateString(),
+            'patients'     => $patients,
         ]);
     })->name('calendario');
+
+    Route::post('/citas', [AppointmentController::class, 'store'])->name('citas.store');
 });

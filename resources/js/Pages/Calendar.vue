@@ -34,7 +34,10 @@
 
                     <!-- Actions -->
                     <div class="flex gap-3">
-                        <button class="flex items-center gap-2 bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">
+                        <button
+                            @click="showModal = true"
+                            class="flex items-center gap-2 bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all"
+                        >
                             <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">add</span>
                             Nueva Cita
                         </button>
@@ -202,6 +205,12 @@
             </aside>
 
         </div>
+
+        <NewAppointmentModal
+            :show="showModal"
+            :patients="patients"
+            @close="showModal = false"
+        />
     </AppLayout>
 </template>
 
@@ -209,6 +218,7 @@
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import NewAppointmentModal from '@/Components/NewAppointmentModal.vue';
 
 const props = defineProps({
     appointments: { type: Array,  default: () => [] },
@@ -217,10 +227,12 @@ const props = defineProps({
     weekLabel:    { type: String, default: '' },
     monthLabel:   { type: String, default: '' },
     today:        { type: String, default: '' },
+    patients:     { type: Array,  default: () => [] },
 });
 
 // ─── Estado ──────────────────────────────────────────────────────────────────
-const selected = ref(null);
+const selected  = ref(null);
+const showModal = ref(false);
 
 // ─── Grilla ──────────────────────────────────────────────────────────────────
 // Horas visibles 08:00 → 18:00
