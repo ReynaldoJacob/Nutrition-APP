@@ -65,6 +65,42 @@
                                         {{ previousVisit.weight }} <span class="text-xs font-normal">kg</span>
                                     </div>
                                 </div>
+                                <div v-if="previousVisit.bodyFat" class="space-y-1">
+                                    <span class="text-[10px] text-on-surface-variant uppercase font-bold">Grasa Corp.</span>
+                                    <div class="font-headline font-bold text-lg text-on-surface">
+                                        {{ previousVisit.bodyFat }} <span class="text-xs font-normal">%</span>
+                                    </div>
+                                </div>
+                                <div v-if="previousVisit.muscleMass" class="space-y-1">
+                                    <span class="text-[10px] text-on-surface-variant uppercase font-bold">Masa Musc.</span>
+                                    <div class="font-headline font-bold text-lg text-on-surface">
+                                        {{ previousVisit.muscleMass }} <span class="text-xs font-normal">kg</span>
+                                    </div>
+                                </div>
+                                <div v-if="previousVisit.bmi" class="space-y-1">
+                                    <span class="text-[10px] text-on-surface-variant uppercase font-bold">IMC</span>
+                                    <div class="font-headline font-bold text-lg text-on-surface">
+                                        {{ previousVisit.bmi }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="previousVisit.waist || previousVisit.hip || previousVisit.bloodPressure" class="pt-4 border-t border-surface-variant space-y-2">
+                                <span class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Medidas</span>
+                                <div class="space-y-1.5">
+                                    <div v-if="previousVisit.waist" class="flex justify-between text-xs">
+                                        <span class="text-on-surface-variant">Cintura</span>
+                                        <span class="font-bold">{{ previousVisit.waist }} cm</span>
+                                    </div>
+                                    <div v-if="previousVisit.hip" class="flex justify-between text-xs">
+                                        <span class="text-on-surface-variant">Cadera</span>
+                                        <span class="font-bold">{{ previousVisit.hip }} cm</span>
+                                    </div>
+                                    <div v-if="previousVisit.bloodPressure" class="flex justify-between text-xs">
+                                        <span class="text-on-surface-variant">Presión Art.</span>
+                                        <span class="font-bold">{{ previousVisit.bloodPressure }}</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div v-if="previousVisit.summary" class="pt-4 border-t border-surface-variant space-y-2">
