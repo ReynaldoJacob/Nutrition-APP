@@ -5,7 +5,7 @@
             <!-- Hero Header -->
             <div class="flex justify-between items-end">
                 <div class="space-y-2">
-                    <h1 class="text-4xl font-extrabold font-headline tracking-tight text-on-surface">Bienvenido, Dr. Smith</h1>
+                    <h1 class="text-4xl font-extrabold font-headline tracking-tight text-on-surface">Bienvenido, {{ authUser?.first_name }}</h1>
                     <p class="text-on-surface-variant font-body">Tienes 4 citas pendientes para el día de hoy.</p>
                 </div>
                 <div class="bg-primary-container px-6 py-4 rounded-xl flex items-center gap-4">
@@ -200,10 +200,13 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const messages = ref([]);
 let channel = null;
+
+const authUser = computed(() => usePage().props.auth?.user);
 
 const today = computed(() => {
     return new Date().toLocaleDateString('es-ES', {

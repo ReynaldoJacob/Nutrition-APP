@@ -27,10 +27,10 @@
                     <img
                         alt="Imagen de perfil del nutriólogo"
                         class="w-10 h-10 rounded-full bg-surface-container-high object-cover"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs8i-EfMRlbNn4TqGAZobJDtwC3-A-GT5UR1m8D3ebJnKUrSaiUM5O7MK5bBVUWOQQnF0jFTmXyEjtSlKvwcifcUGAEMXeM6POEkj4mxXfFw7DBhGq5ZzAU_8jOJZP1ZxgmbaCexbgzm-5fsFIsonwmMsF_p9YAqQ1QW7AEMPqeynhLWQpJ6LYG9OllJsGoLwVGayHKahMRtIOVtrHLYJdXfB-lYLmVQii2q-VIU4xvN0dqII_AAzydeFPlIVixxptLYgc8eW1Ul9y"
+                        :src="authUser?.avatar ?? 'https://lh3.googleusercontent.com/aida-public/AB6AXuCs8i-EfMRlbNn4TqGAZobJDtwC3-A-GT5UR1m8D3ebJnKUrSaiUM5O7MK5bBVUWOQQnF0jFTmXyEjtSlKvwcifcUGAEMXeM6POEkj4mxXfFw7DBhGq5ZzAU_8jOJZP1ZxgmbaCexbgzm-5fsFIsonwmMsF_p9YAqQ1QW7AEMPqeynhLWQpJ6LYG9OllJsGoLwVGayHKahMRtIOVtrHLYJdXfB-lYLmVQii2q-VIU4xvN0dqII_AAzydeFPlIVixxptLYgc8eW1Ul9y'"
                     />
                     <div>
-                        <p class="text-sm font-bold font-headline">Dr. Smith</p>
+                        <p class="text-sm font-bold font-headline">{{ authUser?.full_name }}</p>
                         <p class="text-xs text-on-surface-variant">Clínica Norte</p>
                     </div>
                 </div>
@@ -86,6 +86,7 @@ import { computed } from 'vue';
 
 const page = usePage();
 const currentUrl = computed(() => page.url);
+const authUser = computed(() => page.props.auth?.user);
 
 const navItems = [
     { href: '/',           icon: 'dashboard',       label: 'Dashboard' },

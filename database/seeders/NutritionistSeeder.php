@@ -14,8 +14,8 @@ class NutritionistSeeder extends Seeder
         $user = User::firstOrCreate(
             ['email' => 'nutriologa@clinicalsanctuary.com'],
             [
-                'first_name' => 'María',
-                'last_name'  => 'González',
+                'first_name' => 'Clara',
+                'last_name'  => 'Mercado',
                 'password'   => Hash::make('test2026'),
                 'phone'      => '5512345678',
                 'birth_date' => '1990-06-15',
