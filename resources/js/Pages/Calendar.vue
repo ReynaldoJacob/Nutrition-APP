@@ -199,7 +199,11 @@
                     </div>
 
                     <div class="mt-auto pt-6">
-                        <button class="w-full bg-on-background text-white py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
+                        <button
+                            @click="router.get(route('citas.start', selected.id))"
+                            class="w-full bg-on-background text-white py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                        >
+                            <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">play_circle</span>
                             Comenzar Consulta
                         </button>
                     </div>

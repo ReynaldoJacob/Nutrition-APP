@@ -113,4 +113,6 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/citas', [AppointmentController::class, 'store'])->name('citas.store');
     Route::patch('/citas/{appointment}/cancelar', [AppointmentController::class, 'cancel'])->name('citas.cancel');
+    Route::get('/citas/{appointment}/consulta', [AppointmentController::class, 'start'])->name('citas.start');
+    Route::post('/citas/{appointment}/finalizar', [AppointmentController::class, 'finish'])->name('citas.finish');
 });
