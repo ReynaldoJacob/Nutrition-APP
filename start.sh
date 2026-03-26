@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
 set -e
 
+echo "======= DEBUG VARIABLES ======="
+echo "DB_HOST:     ${DB_HOST}"
+echo "DB_PORT:     ${DB_PORT}"
+echo "DB_DATABASE: ${DB_DATABASE}"
+echo "DB_USERNAME: ${DB_USERNAME}"
+echo "DB_PASSWORD: ${DB_PASSWORD:0:3}***"
+echo "APP_KEY set: $([ -n "$APP_KEY" ] && echo 'SI' || echo 'NO')"
+echo "==============================="
+
+echo "→ Esperando que MySQL esté listo..."
+until php -r "
+\$conn = @new mysqli('${DB_HOST}', '${DB_USERNAME}', '${DB_PASSWORD}', '${DB_DATABASE}', ${DB_PORT:-3306});
+if (\$conn->connect_error) { exit(1); }
+echo 'Conectado OK';
+"; do
+  echo "   MySQL no disponible, reintentando en 3s..."
+  sleep 3
+done
+
 echo "→ Ejecutando migraciones..."
 php artisan migrate --force
 
