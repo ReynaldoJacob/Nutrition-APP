@@ -17,12 +17,16 @@ import Pusher from 'pusher-js';
 window.Pusher = Pusher;
 
 const env = import.meta.env;
-const pusherKey = env.VITE_PUSHER_APP_KEY;
-const pusherHost = env.VITE_PUSHER_HOST;
-const pusherCluster = env.VITE_PUSHER_APP_CLUSTER || 'mt1';
-const pusherPort = Number(env.VITE_PUSHER_PORT || 443);
-const pusherScheme = env.VITE_PUSHER_SCHEME || 'https';
-const broadcastEnabled = String(env.VITE_BROADCAST_ENABLED || '').toLowerCase() === 'true';
+const runtime = window.__realtime || {};
+
+const pusherKey = runtime.key || env.VITE_PUSHER_APP_KEY;
+const pusherHost = runtime.host || env.VITE_PUSHER_HOST;
+const pusherCluster = runtime.cluster || env.VITE_PUSHER_APP_CLUSTER || 'mt1';
+const pusherPort = Number(runtime.port || env.VITE_PUSHER_PORT || 443);
+const pusherScheme = runtime.scheme || env.VITE_PUSHER_SCHEME || 'https';
+const broadcastEnabled = typeof runtime.enabled === 'boolean'
+    ? runtime.enabled
+    : String(env.VITE_BROADCAST_ENABLED || '').toLowerCase() === 'true';
 
 const hasValidPusherKey = Boolean(
     pusherKey

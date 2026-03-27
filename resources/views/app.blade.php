@@ -27,6 +27,27 @@
                 }
             })();
         </script>
+        <meta name="realtime-enabled" content="{{ config('broadcasting.default') === 'pusher' && !empty(config('broadcasting.connections.pusher.key')) ? '1' : '0' }}">
+        <meta name="realtime-key" content="{{ config('broadcasting.connections.pusher.key') }}">
+        <meta name="realtime-cluster" content="{{ env('PUSHER_APP_CLUSTER', 'mt1') }}">
+        <meta name="realtime-host" content="{{ env('PUSHER_HOST') }}">
+        <meta name="realtime-port" content="{{ (int) env('PUSHER_PORT', 443) }}">
+        <meta name="realtime-scheme" content="{{ env('PUSHER_SCHEME', 'https') }}">
+        <script>
+            var realtimeMeta = function (name, fallback) {
+                var el = document.querySelector('meta[name="' + name + '"]');
+                return el && el.content !== '' ? el.content : fallback;
+            };
+
+            window.__realtime = {
+                enabled: realtimeMeta('realtime-enabled', '0') === '1',
+                key: realtimeMeta('realtime-key', ''),
+                cluster: realtimeMeta('realtime-cluster', 'mt1'),
+                host: realtimeMeta('realtime-host', ''),
+                port: Number(realtimeMeta('realtime-port', '443')),
+                scheme: realtimeMeta('realtime-scheme', 'https'),
+            };
+        </script>
         @routes
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead
