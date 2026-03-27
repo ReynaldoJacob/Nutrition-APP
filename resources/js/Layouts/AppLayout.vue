@@ -1,8 +1,8 @@
 <template>
     <div class="bg-surface text-on-surface">
         <!-- Sidebar -->
-        <aside class="bg-slate-50 h-screen w-64 fixed left-0 top-0 overflow-y-auto flex flex-col py-4 z-50">
-            <div class="text-xl font-bold text-emerald-900 px-6 py-8 font-headline">
+        <aside class="bg-surface-container-lowest h-screen w-64 fixed left-0 top-0 overflow-y-auto flex flex-col py-4 z-50 border-r border-outline-variant/20">
+            <div class="text-xl font-bold text-on-primary-container px-6 py-8 font-headline">
                 {{ authUser?.role_key === 'admin' ? 'Panel Admin' : 'Dr. Nutrición' }}
                 <div class="text-xs font-normal text-on-surface-variant mt-1">
                     {{ authUser?.role_key === 'admin' ? 'Administrador' : 'Especialista Clínico' }}
@@ -16,8 +16,8 @@
                     :class="[
                         'flex items-center gap-3 px-4 py-3 transition-colors duration-200',
                         isActive(item.href)
-                            ? 'text-emerald-700 font-bold bg-emerald-50 rounded-r-full'
-                            : 'text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50',
+                            ? 'text-primary font-bold bg-primary/10 rounded-r-full'
+                            : 'text-slate-500 hover:text-primary hover:bg-primary/5',
                     ]"
                 >
                     <span class="material-symbols-outlined">{{ item.icon }}</span>
@@ -49,7 +49,7 @@
         <!-- Main Content Area -->
         <main class="ml-64 h-screen flex flex-col">
             <!-- Top Header -->
-            <header class="shrink-0 z-40 w-full bg-white/80 backdrop-blur-md flex justify-between items-center px-8 py-3 border-b border-slate-100 shadow-sm">
+            <header class="shrink-0 z-40 w-full bg-surface-container-lowest/80 backdrop-blur-md flex justify-between items-center px-8 py-3 border-b border-outline-variant/20 shadow-sm">
                 <div class="flex items-center bg-surface-container-high rounded-full px-4 py-2 w-96 gap-2">
                     <span class="material-symbols-outlined text-on-surface-variant" style="font-size:18px">search</span>
                     <input
@@ -58,11 +58,18 @@
                         type="text"
                     />
                 </div>
-                <div class="flex items-center gap-6">
-                    <button class="text-slate-600 hover:text-emerald-600 transition-colors opacity-80 hover:opacity-100">
+                <div class="flex items-center gap-4">
+                    <button
+                        :title="isDark ? 'Activar modo claro' : 'Activar modo oscuro'"
+                        class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors flex items-center justify-center"
+                        @click="toggleDarkMode"
+                    >
+                        <span class="material-symbols-outlined text-[20px]">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
+                    </button>
+                    <button class="text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100">
                         <span class="material-symbols-outlined">notifications</span>
                     </button>
-                    <button class="text-slate-600 hover:text-emerald-600 transition-colors opacity-80 hover:opacity-100">
+                    <button class="text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100">
                         <span class="material-symbols-outlined">help</span>
                     </button>
                     <button class="bg-primary text-on-primary px-6 py-2 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
@@ -86,11 +93,29 @@
 
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 
 const page = usePage();
 const currentUrl = computed(() => page.url);
 const authUser = computed(() => page.props.auth?.user);
+const isDark = ref(document.documentElement.classList.contains('dark'));
+
+// Aplicar tema de color dinámicamente al cambiar el usuario o su tema
+watchEffect(() => {
+    const theme = authUser.value?.theme_color ?? 'emerald';
+    const body = document.body;
+    // Quitar clases de tema previas y aplicar la nueva
+    body.classList.remove('theme-blue', 'theme-purple', 'theme-rose', 'theme-amber');
+    if (theme !== 'emerald') {
+        body.classList.add(`theme-${theme}`);
+    }
+});
+
+function toggleDarkMode() {
+    isDark.value = !isDark.value;
+    document.documentElement.classList.toggle('dark', isDark.value);
+    localStorage.setItem('theme-mode', isDark.value ? 'dark' : 'light');
+}
 
 const navItems = computed(() => {
     if (authUser.value?.role_key === 'admin') {

@@ -25,6 +25,7 @@ class NutritionistProfile extends Model
         'available_days',
         'start_time',
         'end_time',
+        'theme_color',
         'is_verified',
         'rating',
         'total_patients',

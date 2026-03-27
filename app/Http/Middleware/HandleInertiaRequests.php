@@ -11,16 +11,23 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
+        $user = $request->user();
+        // Eager-load nutritionistProfile una sola vez si el usuario está autenticado
+        if ($user && $user->role_key === 'nutritionist') {
+            $user->loadMissing('nutritionistProfile');
+        }
+
         return array_merge(parent::share($request), [
             'auth' => [
-                'user' => $request->user() ? [
-                    'id'         => $request->user()->id,
-                    'first_name' => $request->user()->first_name,
-                    'last_name'  => $request->user()->last_name,
-                    'full_name'  => $request->user()->full_name,
-                    'email'      => $request->user()->email,
-                    'role_key'   => $request->user()->role_key,
-                    'avatar'     => $request->user()->avatar,
+                'user' => $user ? [
+                    'id'          => $user->id,
+                    'first_name'  => $user->first_name,
+                    'last_name'   => $user->last_name,
+                    'full_name'   => $user->full_name,
+                    'email'       => $user->email,
+                    'role_key'    => $user->role_key,
+                    'avatar'      => $user->avatar,
+                    'theme_color' => $user->nutritionistProfile?->theme_color ?? 'emerald',
                 ] : null,
             ],
         ]);

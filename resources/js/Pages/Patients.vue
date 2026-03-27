@@ -26,7 +26,7 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
 
                 <!-- Filter Card -->
-                <div class="md:col-span-8 bg-white rounded-xl p-6 shadow-sm flex flex-wrap items-center gap-4">
+                <div class="md:col-span-8 bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-wrap items-center gap-4">
                     <div class="flex flex-col gap-1">
                         <label class="text-[10px] font-bold uppercase tracking-wider text-outline px-1">Estado</label>
                         <select
@@ -67,14 +67,14 @@
                         <p class="text-on-primary-container text-xs font-bold uppercase tracking-widest opacity-80">Pacientes Totales</p>
                         <p class="text-3xl font-extrabold text-on-primary-container font-headline">{{ patients.length }}</p>
                     </div>
-                    <div class="bg-white/40 p-3 rounded-full">
+                    <div class="bg-surface-container-lowest/50 p-3 rounded-full">
                         <span class="material-symbols-outlined text-primary" style="font-size:30px">groups</span>
                     </div>
                 </div>
             </div>
 
             <!-- Patient Table -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
                 <table class="w-full text-left">
                     <thead>
                         <tr class="bg-surface-container-low">

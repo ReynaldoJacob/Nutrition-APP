@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\PatientController;
 use App\Models\Appointment;
 use App\Models\PatientProfile;
@@ -117,6 +118,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/citas/{appointment}/cancelar', [AppointmentController::class, 'cancel'])->name('citas.cancel');
     Route::get('/citas/{appointment}/consulta', [AppointmentController::class, 'start'])->name('citas.start');
     Route::post('/citas/{appointment}/finalizar', [AppointmentController::class, 'finish'])->name('citas.finish');
+
+    Route::get('/config', [ConfigController::class, 'index'])->name('config');
+    Route::patch('/config/theme', [ConfigController::class, 'updateTheme'])->name('config.theme');
 
     // Rutas de administrador
     Route::middleware('admin')->prefix('admin')->group(function () {

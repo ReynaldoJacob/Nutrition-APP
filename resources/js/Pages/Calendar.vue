@@ -13,7 +13,7 @@
                     </div>
 
                     <!-- Navigation -->
-                    <div class="flex items-center gap-4 bg-white p-1 rounded-xl shadow-sm">
+                    <div class="flex items-center gap-4 bg-surface-container-lowest p-1 rounded-xl shadow-sm">
                         <button
                             class="p-2 hover:bg-surface-container-low rounded-lg transition-colors"
                             @click="navigateWeek(-1)"
@@ -45,7 +45,7 @@
                 </div>
 
                 <!-- Calendar Grid -->
-                <div class="flex-1 bg-white rounded-3xl shadow-sm flex flex-col border border-slate-100 overflow-hidden">
+                <div class="flex-1 bg-surface-container-lowest rounded-3xl shadow-sm flex flex-col border border-outline-variant/20 overflow-hidden">
 
                     <!-- Day Labels Row -->
                     <div class="calendar-grid border-b border-surface-container-low bg-surface-bright/50">
@@ -85,7 +85,7 @@
                                 v-for="(day, idx) in weekDays"
                                 :key="'bg-' + idx"
                                 class="border-r border-surface-container-low last:border-r-0"
-                                :class="day.isToday ? 'bg-primary-container/5' : 'bg-white'"
+                                :class="day.isToday ? 'bg-primary-container/5' : 'bg-surface-container-lowest'"
                                 :style="`min-height: ${timeSlots.length * 80}px`"
                             ></div>
 
@@ -114,7 +114,7 @@
             </section>
 
             <!-- Details Sidebar -->
-            <aside class="w-80 border-l border-slate-100 bg-white p-8 overflow-y-auto flex flex-col shrink-0">
+            <aside class="w-80 border-l border-outline-variant/20 bg-surface-container-lowest p-8 overflow-y-auto flex flex-col shrink-0">
                 <h3 class="text-xl font-bold font-headline mb-6 text-on-surface">Detalles de la Cita</h3>
 
                 <!-- Empty state -->
@@ -171,7 +171,7 @@
                         <p class="text-xs text-on-surface-variant leading-relaxed">{{ selected.summary }}</p>
                     </div>
 
-                    <div class="h-[1px] bg-slate-100 mb-6"></div>
+                    <div class="h-[1px] bg-surface-container-low mb-6"></div>
 
                     <!-- Quick Actions -->
                     <div>

@@ -2,6 +2,111 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Temas de color por nutriólogo ─────────────────────────────────── */
+/* Los valores son RGB sin alpha, en formato "R G B" para soportar /xx  */
+
+:root {
+  /* Esmeralda (default) — primary */
+  --color-primary:                 0 109 78;
+  --color-primary-dim:             0 95 68;
+  --color-on-primary:              229 255 240;
+  --color-primary-container:       122 249 199;
+  --color-on-primary-container:    0 94 67;
+  --color-primary-fixed:           122 249 199;
+  --color-primary-fixed-dim:       107 235 185;
+  --color-on-primary-fixed:        0 73 51;
+  --color-on-primary-fixed-variant:0 105 75;
+  --color-inverse-primary:         125 252 201;
+
+  /* Surface / text / border — modo claro */
+  --color-surface:                  247 249 251;
+  --color-surface-bright:           247 249 251;
+  --color-surface-dim:              212 219 223;
+  --color-surface-variant:          220 228 232;
+  --color-surface-container-lowest: 255 255 255;
+  --color-surface-container-low:    240 244 247;
+  --color-surface-container:        234 239 242;
+  --color-surface-container-high:   227 233 237;
+  --color-surface-container-highest:220 228 232;
+  --color-on-surface:               44 52 55;
+  --color-on-surface-variant:       89 96 100;
+  --color-outline:                  116 124 128;
+  --color-outline-variant:          172 179 183;
+}
+
+/* ─── Modo oscuro ──────────────────────────────────────────────────── */
+html.dark {
+  --color-surface:                  14 21 18;
+  --color-surface-bright:           52 62 57;
+  --color-surface-dim:              14 21 18;
+  --color-surface-variant:          62 75 70;
+  --color-surface-container-lowest: 10 16 14;
+  --color-surface-container-low:    22 29 25;
+  --color-surface-container:        26 36 32;
+  --color-surface-container-high:   36 46 41;
+  --color-surface-container-highest:47 57 50;
+  --color-on-surface:               221 228 222;
+  --color-on-surface-variant:       193 201 195;
+  --color-outline:                  139 147 144;
+  --color-outline-variant:          62 75 70;
+}
+
+/* ─── Temas de color (primary) por nutriólogo ────────────────────── */
+.theme-blue {
+  --color-primary:                 30 64 175;
+  --color-primary-dim:             24 54 160;
+  --color-on-primary:              232 238 255;
+  --color-primary-container:       189 206 255;
+  --color-on-primary-container:    0 33 142;
+  --color-primary-fixed:           184 196 255;
+  --color-primary-fixed-dim:       154 174 255;
+  --color-on-primary-fixed:        0 18 104;
+  --color-on-primary-fixed-variant:26 50 168;
+  --color-inverse-primary:         154 174 255;
+}
+
+/* Morado */
+.theme-purple {
+  --color-primary:                 126 34 206;
+  --color-primary-dim:             110 26 184;
+  --color-on-primary:              245 232 255;
+  --color-primary-container:       221 188 255;
+  --color-on-primary-container:    40 0 90;
+  --color-primary-fixed:           221 188 255;
+  --color-primary-fixed-dim:       197 158 255;
+  --color-on-primary-fixed:        25 0 66;
+  --color-on-primary-fixed-variant:94 14 165;
+  --color-inverse-primary:         197 158 255;
+}
+
+/* Rosa */
+.theme-rose {
+  --color-primary:                 190 18 60;
+  --color-primary-dim:             165 14 52;
+  --color-on-primary:              255 229 232;
+  --color-primary-container:       255 193 197;
+  --color-on-primary-container:    124 0 25;
+  --color-primary-fixed:           255 193 197;
+  --color-primary-fixed-dim:       255 148 163;
+  --color-on-primary-fixed:        93 0 20;
+  --color-on-primary-fixed-variant:165 14 52;
+  --color-inverse-primary:         255 148 163;
+}
+
+/* Ámbar */
+.theme-amber {
+  --color-primary:                 217 119 6;
+  --color-primary-dim:             185 99 5;
+  --color-on-primary:              255 248 236;
+  --color-primary-container:       255 216 145;
+  --color-on-primary-container:    78 40 0;
+  --color-primary-fixed:           255 216 145;
+  --color-primary-fixed-dim:       247 186 91;
+  --color-on-primary-fixed:        45 22 0;
+  --color-on-primary-fixed-variant:160 78 0;
+  --color-inverse-primary:         247 186 91;
+}
+
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   font-family: 'Material Symbols Outlined';

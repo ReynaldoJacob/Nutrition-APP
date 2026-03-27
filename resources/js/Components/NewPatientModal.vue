@@ -10,7 +10,7 @@
         >
             <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 overflow-y-auto">
                 <!-- Backdrop -->
-                <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="$emit('close')" />
+                <div class="fixed inset-0 bg-inverse-surface/60 backdrop-blur-sm" @click="$emit('close')" />
 
                 <!-- Modal Content -->
                 <Transition
