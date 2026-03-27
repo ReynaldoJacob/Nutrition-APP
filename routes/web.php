@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConfigController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PatientController;
 use App\Models\Appointment;
 use App\Models\PatientProfile;
@@ -50,10 +51,25 @@ Route::middleware('auth')->group(function () {
                 'name'   => $p->user->full_name,
             ]);
 
+        $adminNotices = \App\Models\AdminNotice::with('admin')
+            ->where('recipient_user_id', $nutritionistId)
+            ->latest('sent_at')
+            ->take(10)
+            ->get()
+            ->map(fn($n) => [
+                'id'       => $n->id,
+                'category' => $n->category,
+                'title'    => $n->title,
+                'message'  => $n->message,
+                'admin'    => $n->admin?->full_name ?? 'Administración',
+                'sentAt'   => optional($n->sent_at)->translatedFormat('d M, h:i A'),
+            ]);
+
         return \Inertia\Inertia::render('Dashboard', [
             'totalPatients'     => $total,
             'todayAppointments' => $todayAppointments,
             'patients'          => $patients,
+            'adminNotices'      => $adminNotices,
         ]);
     })->name('dashboard');
     Route::get('/pacientes', [PatientController::class, 'index'])->name('pacientes');
@@ -121,6 +137,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/config', [ConfigController::class, 'index'])->name('config');
     Route::patch('/config/theme', [ConfigController::class, 'updateTheme'])->name('config.theme');
+    Route::patch('/notificaciones/vistas', [NotificationController::class, 'markAsSeen'])->name('notifications.seen');
 
     // Rutas de administrador
     Route::middleware('admin')->prefix('admin')->group(function () {
@@ -128,5 +145,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/nutriologos', [AdminController::class, 'nutritionists'])->name('admin.nutriologos');
         Route::post('/nutriologos', [AdminController::class, 'storeNutritionist'])->name('admin.nutriologos.store');
         Route::patch('/nutriologos/{id}/toggle', [AdminController::class, 'toggleNutritionist'])->name('admin.nutriologos.toggle');
+        Route::get('/avisos', [AdminController::class, 'notices'])->name('admin.avisos');
+        Route::post('/avisos', [AdminController::class, 'sendNotice'])->name('admin.avisos.send');
     });
 });

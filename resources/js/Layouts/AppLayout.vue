@@ -66,9 +66,48 @@
                     >
                         <span class="material-symbols-outlined text-[20px]">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
                     </button>
-                    <button class="text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100">
-                        <span class="material-symbols-outlined">notifications</span>
-                    </button>
+                    <div class="relative" @click.stop>
+                        <button
+                            class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors flex items-center justify-center relative"
+                            @click="toggleNotifications"
+                        >
+                            <span class="material-symbols-outlined">notifications</span>
+                            <span
+                                v-if="unreadCount > 0"
+                                class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-surface-container-lowest"
+                            ></span>
+                        </button>
+
+                        <div
+                            v-if="showNotifications"
+                            class="absolute right-0 mt-2 w-[360px] max-w-[90vw] bg-surface-container-lowest border border-outline-variant/30 rounded-2xl shadow-xl overflow-hidden z-50"
+                        >
+                            <div class="px-4 py-3 border-b border-outline-variant/20 flex items-center justify-between">
+                                <h3 class="text-sm font-bold text-on-surface">Notificaciones nuevas</h3>
+                                <span v-if="unreadCount > 0" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">{{ unreadCount }}</span>
+                            </div>
+
+                            <div v-if="notificationItems.length === 0" class="p-5 text-sm text-on-surface-variant text-center">
+                                No hay notificaciones.
+                            </div>
+
+                            <ul v-else class="max-h-96 overflow-y-auto p-3 space-y-2">
+                                <li
+                                    v-for="item in notificationItems"
+                                    :key="item.id"
+                                    class="p-3 rounded-xl bg-surface-container-low"
+                                >
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-primary/15 text-primary">{{ categoryLabel(item.category) }}</span>
+                                        <span class="text-[11px] text-on-surface-variant">{{ item.sentAt }}</span>
+                                    </div>
+                                    <p class="text-sm font-bold text-on-surface">{{ item.title }}</p>
+                                    <p class="text-xs text-on-surface-variant mt-1 whitespace-pre-line">{{ item.message }}</p>
+                                    <p class="text-[10px] text-on-surface-variant mt-2">Enviado por {{ item.admin }}</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                     <button class="text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100">
                         <span class="material-symbols-outlined">help</span>
                     </button>
@@ -93,12 +132,22 @@
 
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed, ref, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue';
 
 const page = usePage();
 const currentUrl = computed(() => page.url);
 const authUser = computed(() => page.props.auth?.user);
 const isDark = ref(document.documentElement.classList.contains('dark'));
+const showNotifications = ref(false);
+const notificationItems = ref([]);
+const unreadCount = ref(0);
+let notificationsChannel = null;
+
+watchEffect(() => {
+    const shared = page.props.notifications ?? { items: [], unread_count: 0 };
+    notificationItems.value = shared.items ?? [];
+    unreadCount.value = shared.unread_count ?? 0;
+});
 
 // Aplicar tema de color dinámicamente al cambiar el usuario o su tema
 watchEffect(() => {
@@ -117,6 +166,33 @@ function toggleDarkMode() {
     localStorage.setItem('theme-mode', isDark.value ? 'dark' : 'light');
 }
 
+function categoryLabel(category) {
+    const labels = {
+        update: 'Actualización',
+        maintenance: 'Mantenimiento',
+        policy: 'Política',
+        training: 'Capacitación',
+        alert: 'Alerta',
+        reminder: 'Recordatorio',
+    };
+    return labels[category] ?? category;
+}
+
+function closeNotifications() {
+    showNotifications.value = false;
+}
+
+function toggleNotifications() {
+    showNotifications.value = !showNotifications.value;
+    if (showNotifications.value && unreadCount.value > 0) {
+        window.axios.patch(route('notifications.seen')).then(() => {
+            unreadCount.value = 0;
+        }).catch(() => {
+            // noop
+        });
+    }
+}
+
 function handleLogout() {
     localStorage.removeItem('theme-mode');
     document.documentElement.classList.remove('dark');
@@ -124,11 +200,44 @@ function handleLogout() {
     router.post(route('logout'));
 }
 
+onMounted(() => {
+    document.addEventListener('click', closeNotifications);
+
+    if (window.Echo) {
+        notificationsChannel = window.Echo.channel('notifications');
+        notificationsChannel.listen('.notification.sent', (data) => {
+            const myUserId = authUser.value?.id;
+            const isForMe = !data.target_user_id || Number(data.target_user_id) === Number(myUserId);
+            if (!isForMe) return;
+
+            notificationItems.value.unshift({
+                id: `rt-${Date.now()}`,
+                category: data.category ?? 'update',
+                title: data.title ?? 'Notificación en vivo',
+                message: data.message ?? 'Tienes una nueva notificación.',
+                admin: data.admin_name ?? 'Administración',
+                sentAt: new Date().toLocaleTimeString(),
+            });
+
+            notificationItems.value = notificationItems.value.slice(0, 20);
+            unreadCount.value += 1;
+        });
+    }
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', closeNotifications);
+    if (notificationsChannel && window.Echo) {
+        window.Echo.leave('notifications');
+    }
+});
+
 const navItems = computed(() => {
     if (authUser.value?.role_key === 'admin') {
         return [
             { href: '/admin',             icon: 'admin_panel_settings', label: 'Panel Admin' },
             { href: '/admin/nutriologos', icon: 'medical_services',     label: 'Nutriólogos' },
+            { href: '/admin/avisos',      icon: 'campaign',             label: 'Avisos' },
         ];
     }
     return [

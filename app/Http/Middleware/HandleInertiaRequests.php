@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AdminNotice;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -17,6 +18,33 @@ class HandleInertiaRequests extends Middleware
             $user->loadMissing('nutritionistProfile');
         }
 
+        $notificationItems = [];
+        $unreadCount = 0;
+
+        if ($user && $user->role_key === 'nutritionist') {
+            $notices = AdminNotice::with('admin')
+                ->where('recipient_user_id', $user->id)
+                ->latest('sent_at')
+                ->take(12)
+                ->get();
+
+            $notificationItems = $notices->map(fn($n) => [
+                'id'       => $n->id,
+                'category' => $n->category,
+                'title'    => $n->title,
+                'message'  => $n->message,
+                'admin'    => $n->admin?->full_name ?? 'Administración',
+                'sentAt'   => optional($n->sent_at)->translatedFormat('d M, h:i A'),
+                'sentAtIso'=> optional($n->sent_at)->toIso8601String(),
+            ])->values()->all();
+
+            $unreadQuery = AdminNotice::where('recipient_user_id', $user->id);
+            if ($user->notifications_last_seen_at) {
+                $unreadQuery->where('sent_at', '>', $user->notifications_last_seen_at);
+            }
+            $unreadCount = $unreadQuery->count();
+        }
+
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $user ? [
@@ -29,6 +57,10 @@ class HandleInertiaRequests extends Middleware
                     'avatar'      => $user->avatar,
                     'theme_color' => $user->nutritionistProfile?->theme_color ?? 'emerald',
                 ] : null,
+            ],
+            'notifications' => [
+                'items' => $notificationItems,
+                'unread_count' => $unreadCount,
             ],
         ]);
     }

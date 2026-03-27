@@ -38,6 +38,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'birth_date'        => 'date',
         'last_login_at'     => 'datetime',
+        'notifications_last_seen_at' => 'datetime',
         'is_active'         => 'boolean',
     ];
 

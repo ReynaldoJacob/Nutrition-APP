@@ -14,11 +14,11 @@ class NotificationSent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public string $message;
+    public array $payload;
 
-    public function __construct(string $message)
+    public function __construct(array $payload)
     {
-        $this->message = $message;
+        $this->payload = $payload;
     }
 
     public function broadcastOn(): Channel
@@ -29,5 +29,10 @@ class NotificationSent implements ShouldBroadcast
     public function broadcastAs(): string
     {
         return 'notification.sent';
+    }
+
+    public function broadcastWith(): array
+    {
+        return $this->payload;
     }
 }

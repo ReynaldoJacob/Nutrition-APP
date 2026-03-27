@@ -115,19 +115,21 @@
                             <span class="ml-1 text-xs text-on-surface-variant font-normal">(canal: notifications)</span>
                         </h2>
                         <div v-if="messages.length === 0" class="text-on-surface-variant text-sm text-center py-6">
-                            Esperando eventos en tiempo real...
+                            No hay notificaciones todavía.
                         </div>
-                        <ul v-else class="space-y-2">
+                        <ul v-else class="space-y-3 max-h-[420px] overflow-y-auto pr-1">
                             <li
                                 v-for="(msg, i) in messages"
                                 :key="i"
-                                class="flex items-start gap-3 p-3 bg-surface-container-low rounded-lg"
+                                class="p-4 bg-surface-container-low rounded-xl"
                             >
-                                <span class="material-symbols-outlined text-primary mt-0.5" style="font-size:16px;font-variation-settings:'FILL' 1;">circle</span>
-                                <div>
-                                    <p class="text-sm font-medium text-on-surface">{{ msg.message }}</p>
-                                    <p class="text-xs text-on-surface-variant">{{ msg.time }}</p>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-primary/15 text-primary">{{ categoryLabel(msg.category) }}</span>
+                                    <span class="text-[11px] text-on-surface-variant">{{ msg.time }}</span>
                                 </div>
+                                <p class="text-sm font-bold text-on-surface">{{ msg.title }}</p>
+                                <p class="text-xs text-on-surface-variant mt-1 whitespace-pre-line">{{ msg.message }}</p>
+                                <p class="text-[10px] text-on-surface-variant mt-2">Enviado por {{ msg.admin }}</p>
                             </li>
                         </ul>
                     </div>
@@ -204,11 +206,20 @@ const props = defineProps({
     totalPatients:     { type: Number, default: 0 },
     todayAppointments: { type: Array,  default: () => [] },
     patients:          { type: Array,  default: () => [] },
+    adminNotices:      { type: Array,  default: () => [] },
 });
 
 const showModal = ref(false);
 
-const messages = ref([]);
+const messages = ref(
+    (props.adminNotices ?? []).map((notice) => ({
+        category: notice.category,
+        title: notice.title,
+        message: notice.message,
+        admin: notice.admin,
+        time: notice.sentAt,
+    }))
+);
 let channel = null;
 
 const authUser = computed(() => usePage().props.auth?.user);
@@ -225,8 +236,15 @@ onMounted(() => {
     if (window.Echo) {
         channel = window.Echo.channel('notifications');
         channel.listen('.notification.sent', (data) => {
+            const myUserId = authUser.value?.id;
+            const isForMe = !data.target_user_id || Number(data.target_user_id) === Number(myUserId);
+            if (!isForMe) return;
+
             messages.value.unshift({
-                message: data.message,
+                category: data.category ?? 'update',
+                title: data.title ?? 'Notificación en vivo',
+                message: data.message ?? 'Tienes un nuevo aviso.',
+                admin: data.admin_name ?? 'Sistema',
                 time: new Date().toLocaleTimeString(),
             });
         });
@@ -238,4 +256,16 @@ onUnmounted(() => {
         window.Echo.leave('notifications');
     }
 });
+
+function categoryLabel(category) {
+    const labels = {
+        update: 'Actualización',
+        maintenance: 'Mantenimiento',
+        policy: 'Política',
+        training: 'Capacitación',
+        alert: 'Alerta',
+        reminder: 'Recordatorio',
+    };
+    return labels[category] ?? category;
+}
 </script>
