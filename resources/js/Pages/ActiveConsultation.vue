@@ -107,6 +107,34 @@
                                 <span class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Notas Clínicas</span>
                                 <p class="text-sm leading-relaxed text-on-surface-variant">{{ previousVisit.summary }}</p>
                             </div>
+
+                            <!-- Plan nutricional anterior -->
+                            <div v-if="previousVisit.prescribedKcal || previousVisit.gebAverage" class="pt-4 border-t border-surface-variant space-y-3">
+                                <span class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">local_fire_department</span>
+                                    Plan Nutricional Anterior
+                                </span>
+                                <div class="space-y-1.5">
+                                    <div v-if="previousVisit.gebAverage" class="flex justify-between text-xs">
+                                        <span class="text-on-surface-variant">GEB (prom.)</span>
+                                        <span class="font-bold">{{ Number(previousVisit.gebAverage).toLocaleString('es-MX') }} kcal</span>
+                                    </div>
+                                    <div v-if="previousVisit.getTotal" class="flex justify-between text-xs">
+                                        <span class="text-on-surface-variant">GET</span>
+                                        <span class="font-bold">{{ Number(previousVisit.getTotal).toLocaleString('es-MX') }} kcal</span>
+                                    </div>
+                                    <div v-if="previousVisit.prescribedKcal" class="flex justify-between text-xs">
+                                        <span class="text-on-surface-variant">Prescripción</span>
+                                        <span class="font-bold text-primary">{{ Number(previousVisit.prescribedKcal).toLocaleString('es-MX') }} kcal</span>
+                                    </div>
+                                    <div v-if="previousVisit.proteinGkg || previousVisit.fatGkg" class="flex justify-between text-xs">
+                                        <span class="text-on-surface-variant">Macros</span>
+                                        <span class="font-bold">
+                                            {{ previousVisit.proteinGkg }}P · {{ previousVisit.fatGkg }}L g/kg
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Contexto del paciente -->
@@ -206,19 +234,16 @@
                             </div>
                         </div>
 
-                        <!-- Masa Muscular -->
+                        <!-- Masa Magra -->
                         <div class="bg-surface-container-lowest p-8 rounded-[2.5rem] shadow-sm flex flex-col justify-between min-h-[220px]">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <label class="text-xs font-bold text-on-surface-variant uppercase tracking-[0.2em]">Masa Muscular</label>
+                                    <label class="text-xs font-bold text-on-surface-variant uppercase tracking-[0.2em]">Masa Magra</label>
                                     <div class="mt-2 flex items-baseline gap-2">
-                                        <input
-                                            v-model="form.muscle_mass"
-                                            class="w-36 bg-transparent border-none p-0 font-headline font-extrabold text-6xl text-on-surface focus:ring-0 placeholder:text-surface-dim"
-                                            placeholder="00.0"
-                                            type="number"
-                                            min="1" max="300" step="0.1"
-                                        />
+                                        <div
+                                            class="font-headline font-extrabold text-6xl"
+                                            :class="leanMass !== null ? 'text-tertiary' : 'text-surface-dim'"
+                                        >{{ leanMass !== null ? leanMass : '--.-' }}</div>
                                         <span class="font-headline font-bold text-2xl text-on-surface-variant">kg</span>
                                     </div>
                                 </div>
@@ -226,21 +251,37 @@
                                     <span class="material-symbols-outlined text-on-tertiary-container text-3xl">monitoring</span>
                                 </div>
                             </div>
+                            <div class="mt-4 text-xs text-on-surface-variant">
+                                <span v-if="leanMass !== null">Peso × (1 − % Grasa / 100)</span>
+                                <span v-else>Requiere peso y % de grasa corporal</span>
+                            </div>
                         </div>
 
                         <!-- IMC (calculado) -->
                         <div class="bg-surface-container-lowest p-8 rounded-[2.5rem] shadow-sm flex flex-col justify-between min-h-[220px]">
                             <div class="flex justify-between items-start">
-                                <div>
+                                <div class="flex-1">
                                     <label class="text-xs font-bold text-on-surface-variant uppercase tracking-[0.2em]">IMC (BMI)</label>
                                     <div class="mt-2 flex items-baseline gap-2">
                                         <div
                                             class="font-headline font-extrabold text-6xl"
                                             :class="bmi ? bmiColor : 'text-surface-dim'"
                                         >{{ bmi ?? '--.-' }}</div>
+                                        <span class="font-headline font-bold text-2xl text-on-surface-variant">kg/m²</span>
+                                    </div>
+                                    <!-- Estatura -->
+                                    <div class="mt-4 flex items-center gap-2">
+                                        <label class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest whitespace-nowrap">Estatura</label>
+                                        <input
+                                            v-model="form.height"
+                                            class="w-24 bg-transparent border-b-2 border-outline-variant focus:border-primary border-t-0 border-x-0 p-0 text-base font-bold text-on-surface focus:ring-0"
+                                            type="number" min="50" max="250" step="0.5"
+                                            placeholder="170"
+                                        />
+                                        <span class="text-[10px] text-on-surface-variant">cm</span>
                                     </div>
                                 </div>
-                                <div class="bg-surface-container-high p-3 rounded-2xl">
+                                <div class="bg-surface-container-high p-3 rounded-2xl shrink-0">
                                     <span class="material-symbols-outlined text-on-surface-variant text-3xl">calculate</span>
                                 </div>
                             </div>
@@ -253,6 +294,8 @@
                     <!-- Signos vitales y circunferencias -->
                     <section class="space-y-6">
                         <h3 class="font-headline font-bold text-xl text-on-surface">Signos Vitales y Circunferencias</h3>
+
+                        <!-- Vitales -->
                         <div class="grid grid-cols-3 gap-6">
                             <div class="bg-surface-container-low p-5 rounded-2xl">
                                 <label class="text-[10px] font-bold text-on-surface-variant uppercase block mb-2">Cintura (cm)</label>
@@ -278,6 +321,263 @@
                                     placeholder="120/80"
                                     type="text"
                                 />
+                            </div>
+                        </div>
+
+                        <!-- Circunferencias para Lee et al. -->
+                        <div class="bg-surface-container-low p-5 rounded-2xl space-y-4">
+                            <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Circunferencias (cm) — para masa muscular Lee et al.</p>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="text-[10px] font-bold text-on-surface-variant uppercase block mb-2">Brazo relajado</label>
+                                    <input v-model="form.arm_circ" type="number" min="1" max="100" step="0.1"
+                                        class="w-full bg-transparent border-b-2 border-outline-variant focus:border-primary border-t-0 border-x-0 p-0 text-xl font-headline font-bold focus:ring-0"
+                                        placeholder="28.0" />
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-on-surface-variant uppercase block mb-2">Brazo contraído</label>
+                                    <input v-model="form.arm_contracted" type="number" min="1" max="100" step="0.1"
+                                        class="w-full bg-transparent border-b-2 border-outline-variant focus:border-primary border-t-0 border-x-0 p-0 text-xl font-headline font-bold focus:ring-0"
+                                        placeholder="30.0" />
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-on-surface-variant uppercase block mb-2">Abdomen</label>
+                                    <input v-model="form.abdomen_circ" type="number" min="30" max="300" step="0.5"
+                                        class="w-full bg-transparent border-b-2 border-outline-variant focus:border-primary border-t-0 border-x-0 p-0 text-xl font-headline font-bold focus:ring-0"
+                                        placeholder="85.0" />
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-on-surface-variant uppercase block mb-2">Muslo</label>
+                                    <input v-model="form.thigh_circ" type="number" min="1" max="150" step="0.1"
+                                        class="w-full bg-transparent border-b-2 border-outline-variant focus:border-primary border-t-0 border-x-0 p-0 text-xl font-headline font-bold focus:ring-0"
+                                        placeholder="55.0" />
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-on-surface-variant uppercase block mb-2">Pantorrilla</label>
+                                    <input v-model="form.calf_circ" type="number" min="1" max="100" step="0.1"
+                                        class="w-full bg-transparent border-b-2 border-outline-variant focus:border-primary border-t-0 border-x-0 p-0 text-xl font-headline font-bold focus:ring-0"
+                                        placeholder="36.0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pliegues cutáneos (opcionales) -->
+                        <div class="bg-surface-container-low p-5 rounded-2xl space-y-4">
+                            <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Pliegues cutáneos (mm) <span class="normal-case font-normal">— opcionales, mejoran precisión Lee</span></p>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="text-[10px] font-bold text-on-surface-variant uppercase block mb-2">Tríceps</label>
+                                    <input v-model="form.tricep_mm" type="number" min="1" max="80" step="0.1"
+                                        class="w-full bg-transparent border-b-2 border-outline-variant focus:border-primary border-t-0 border-x-0 p-0 text-xl font-headline font-bold focus:ring-0"
+                                        placeholder="—" />
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-on-surface-variant uppercase block mb-2">Muslo</label>
+                                    <input v-model="form.thigh_mm" type="number" min="1" max="80" step="0.1"
+                                        class="w-full bg-transparent border-b-2 border-outline-variant focus:border-primary border-t-0 border-x-0 p-0 text-xl font-headline font-bold focus:ring-0"
+                                        placeholder="—" />
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-on-surface-variant uppercase block mb-2">Pantorrilla</label>
+                                    <input v-model="form.calf_mm" type="number" min="1" max="80" step="0.1"
+                                        class="w-full bg-transparent border-b-2 border-outline-variant focus:border-primary border-t-0 border-x-0 p-0 text-xl font-headline font-bold focus:ring-0"
+                                        placeholder="—" />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- ─── Plan Nutricional ─────────────────────────────── -->
+                    <section class="space-y-6 pb-8">
+                        <h3 class="font-headline font-bold text-xl text-on-surface flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                            Plan Nutricional
+                        </h3>
+
+                        <!-- GEB — Gasto Energético Basal -->
+                        <div class="bg-surface-container-lowest p-6 rounded-3xl space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-headline font-bold text-sm text-on-surface">GEB — Gasto Energético Basal</h4>
+                                <span class="text-[10px] text-on-surface-variant">Requiere: peso + talla + edad · Katch requiere además % grasa</span>
+                            </div>
+                            <div class="grid grid-cols-5 gap-3">
+                                <div v-for="geb in [
+                                    { label: 'Harris-Ben.', value: gebHarris },
+                                    { label: 'Mifflin',     value: gebMifflin },
+                                    { label: 'Owen',        value: gebOwen },
+                                    { label: 'Katch',       value: gebKatch },
+                                ]" :key="geb.label"
+                                    class="bg-surface-container p-4 rounded-2xl text-center"
+                                >
+                                    <div class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">{{ geb.label }}</div>
+                                    <div class="font-headline font-bold text-xl" :class="geb.value ? 'text-on-surface' : 'text-outline-variant'">
+                                        {{ geb.value ? geb.value.toLocaleString('es-MX') : '—' }}
+                                    </div>
+                                    <div class="text-[9px] text-on-surface-variant mt-1">kcal</div>
+                                </div>
+
+                                <!-- Promedio destacado -->
+                                <div class="bg-primary-container p-4 rounded-2xl text-center">
+                                    <div class="text-[9px] font-bold text-primary uppercase tracking-wider mb-2">Promedio</div>
+                                    <div class="font-headline font-extrabold text-xl" :class="gebAverage ? 'text-on-primary-container' : 'text-outline-variant'">
+                                        {{ gebAverage ? gebAverage.toLocaleString('es-MX') : '—' }}
+                                    </div>
+                                    <div class="text-[9px] text-on-primary-container mt-1">kcal / día</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Factor de Actividad + GET + Prescripción -->
+                        <div class="bg-surface-container-lowest p-6 rounded-3xl space-y-6">
+
+                            <!-- Factor de actividad -->
+                            <div class="space-y-3">
+                                <h4 class="font-headline font-bold text-sm text-on-surface">Factor de Actividad</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        v-for="af in activityFactors" :key="af.value"
+                                        type="button"
+                                        class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-0.5"
+                                        :class="form.activity_factor === af.value
+                                            ? 'bg-primary text-on-primary shadow-md scale-105'
+                                            : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'"
+                                        @click="form.activity_factor = af.value"
+                                    >
+                                        <span>{{ af.label }}</span>
+                                        <span class="font-normal opacity-60 text-[9px]">×{{ af.value }}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- GET y Prescripción -->
+                            <div class="flex items-stretch gap-6">
+                                <!-- GET -->
+                                <div v-if="getTotal" class="bg-secondary-container px-8 py-5 rounded-2xl text-center shrink-0">
+                                    <div class="text-[9px] font-bold text-on-secondary-container uppercase tracking-widest mb-1">GET Total</div>
+                                    <div class="font-headline font-extrabold text-4xl text-on-secondary-container">
+                                        {{ getTotal.toLocaleString('es-MX') }}
+                                    </div>
+                                    <div class="text-xs text-on-secondary-container opacity-70 mt-1">
+                                        kcal / día
+                                    </div>
+                                    <div class="text-[9px] text-on-secondary-container opacity-50 mt-1">
+                                        {{ gebAverage?.toLocaleString('es-MX') }} × {{ form.activity_factor }}
+                                    </div>
+                                </div>
+                                <div v-else class="bg-surface-container px-8 py-5 rounded-2xl text-center text-outline-variant shrink-0 flex flex-col items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-2xl">bolt</span>
+                                    <span class="text-xs">Ingresa peso para calcular GET</span>
+                                </div>
+
+                                <!-- Tipo de prescripción -->
+                                <div class="flex-1 space-y-3">
+                                    <h4 class="font-headline font-bold text-sm text-on-surface">Tipo de Prescripción</h4>
+                                    <div class="flex gap-3 h-full">
+                                        <button
+                                            v-for="pt in prescriptionTypes" :key="pt.value"
+                                            type="button"
+                                            class="flex-1 py-3 px-4 rounded-2xl text-sm font-bold transition-all border-2 flex flex-col items-center gap-1"
+                                            :class="form.prescription_type === pt.value
+                                                ? pt.activeClass
+                                                : 'bg-surface-container border-transparent text-on-surface-variant hover:bg-surface-container-high'"
+                                            @click="form.prescription_type = pt.value"
+                                        >
+                                            <span>{{ pt.label }}</span>
+                                            <span class="text-[10px] opacity-70">{{ pt.mod }}</span>
+                                            <span v-if="prescribedKcal && form.prescription_type === pt.value" class="text-xs font-extrabold">
+                                                {{ prescribedKcal.toLocaleString('es-MX') }} kcal
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Distribución de Macronutrientes -->
+                        <div class="bg-surface-container-lowest p-6 rounded-3xl space-y-5">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-headline font-bold text-sm text-on-surface">Distribución de Macronutrientes</h4>
+                                <div v-if="prescribedKcal" class="text-xs font-bold text-on-surface-variant">
+                                    Prescripción: <span class="text-primary font-extrabold">{{ prescribedKcal.toLocaleString('es-MX') }} kcal</span>
+                                </div>
+                                <div v-else class="text-xs text-on-surface-variant">Requiere GET calculado</div>
+                            </div>
+
+                            <!-- Header -->
+                            <div class="grid grid-cols-5 gap-3 text-[9px] font-bold text-on-surface-variant uppercase tracking-widest px-3">
+                                <div>Macronutriente</div>
+                                <div class="text-center">g / kg</div>
+                                <div class="text-center">g total</div>
+                                <div class="text-center">kcal</div>
+                                <div class="text-center">%</div>
+                            </div>
+
+                            <!-- Proteínas -->
+                            <div class="grid grid-cols-5 gap-3 items-center bg-secondary-container/10 p-3 rounded-2xl">
+                                <div class="text-sm font-bold text-on-surface flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-secondary shrink-0"></span>Proteínas
+                                </div>
+                                <div>
+                                    <input v-model.number="form.protein_gkg"
+                                        type="number" min="0.5" max="5" step="0.1"
+                                        class="w-full bg-surface-container-high border-none rounded-xl text-center text-sm font-bold focus:ring-2 focus:ring-secondary/30 py-2"
+                                    />
+                                </div>
+                                <div class="text-center text-sm font-bold" :class="macros ? 'text-on-surface' : 'text-outline-variant'">{{ macros?.protein.g ?? '—' }}</div>
+                                <div class="text-center text-sm font-bold" :class="macros ? 'text-on-surface' : 'text-outline-variant'">{{ macros ? macros.protein.kcal.toLocaleString('es-MX') : '—' }}</div>
+                                <div class="text-center">
+                                    <span v-if="macros" class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-xs font-bold rounded-full">{{ macros.protein.pct }}%</span>
+                                    <span v-else class="text-outline-variant text-sm">—</span>
+                                </div>
+                            </div>
+
+                            <!-- Lípidos -->
+                            <div class="grid grid-cols-5 gap-3 items-center bg-tertiary-container/10 p-3 rounded-2xl">
+                                <div class="text-sm font-bold text-on-surface flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-tertiary shrink-0"></span>Lípidos
+                                </div>
+                                <div>
+                                    <input v-model.number="form.fat_gkg"
+                                        type="number" min="0.3" max="3" step="0.1"
+                                        class="w-full bg-surface-container-high border-none rounded-xl text-center text-sm font-bold focus:ring-2 focus:ring-tertiary/30 py-2"
+                                    />
+                                </div>
+                                <div class="text-center text-sm font-bold" :class="macros ? 'text-on-surface' : 'text-outline-variant'">{{ macros?.fat.g ?? '—' }}</div>
+                                <div class="text-center text-sm font-bold" :class="macros ? 'text-on-surface' : 'text-outline-variant'">{{ macros ? macros.fat.kcal.toLocaleString('es-MX') : '—' }}</div>
+                                <div class="text-center">
+                                    <span v-if="macros" class="px-2 py-0.5 bg-tertiary-container text-on-tertiary-container text-xs font-bold rounded-full">{{ macros.fat.pct }}%</span>
+                                    <span v-else class="text-outline-variant text-sm">—</span>
+                                </div>
+                            </div>
+
+                            <!-- Carbohidratos (calculado) -->
+                            <div class="grid grid-cols-5 gap-3 items-center bg-primary-container/10 p-3 rounded-2xl">
+                                <div class="text-sm font-bold text-on-surface flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-primary shrink-0"></span>
+                                    Carbohidratos
+                                    <span class="text-[9px] bg-surface-container px-1.5 py-0.5 rounded text-on-surface-variant">auto</span>
+                                </div>
+                                <div class="text-center text-sm font-bold" :class="macros ? 'text-on-surface' : 'text-outline-variant'">{{ macros?.carbs.gkg ?? '—' }}</div>
+                                <div class="text-center text-sm font-bold" :class="macros ? 'text-on-surface' : 'text-outline-variant'">{{ macros?.carbs.g ?? '—' }}</div>
+                                <div class="text-center text-sm font-bold" :class="macros ? 'text-on-surface' : 'text-outline-variant'">{{ macros ? macros.carbs.kcal.toLocaleString('es-MX') : '—' }}</div>
+                                <div class="text-center">
+                                    <span v-if="macros && macros.carbs.kcal > 0" class="px-2 py-0.5 bg-primary-container text-on-primary-container text-xs font-bold rounded-full">{{ macros.carbs.pct }}%</span>
+                                    <span v-else class="text-outline-variant text-sm">—</span>
+                                </div>
+                            </div>
+
+                            <!-- Total -->
+                            <div class="grid grid-cols-5 gap-3 items-center border-t-2 border-surface-container-high pt-4 px-3">
+                                <div class="text-xs font-extrabold text-on-surface uppercase tracking-wider">Total</div>
+                                <div></div>
+                                <div class="text-center text-sm font-extrabold text-on-surface">
+                                    {{ macros ? (parseFloat(macros.protein.g) + parseFloat(macros.fat.g) + parseFloat(macros.carbs.g)).toFixed(0) + ' g' : '—' }}
+                                </div>
+                                <div class="text-center text-base font-extrabold text-primary">
+                                    {{ prescribedKcal ? prescribedKcal.toLocaleString('es-MX') + ' kcal' : '—' }}
+                                </div>
+                                <div class="text-center text-xs font-bold text-on-surface-variant">
+                                    {{ macros ? '100%' : '—' }}
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -454,19 +754,49 @@ onUnmounted(() => clearInterval(timer));
 
 // ─── Formulario de mediciones ─────────────────────────────────────────────────
 const form = ref({
-    weight:         '',
-    body_fat:       '',
-    muscle_mass:    '',
-    waist:          '',
-    hip:            '',
-    blood_pressure: '',
-    summary:        '',
+    weight:            '',
+    height:            props.patient.height ?? '',
+    body_fat:          '',
+    muscle_mass:       '',
+    waist:             '',
+    hip:               '',
+    blood_pressure:    '',
+    summary:           '',
+    // Plan nutricional
+    activity_factor:   props.patient.activityFactor ?? 1.375,
+    prescription_type: 'maintenance',
+    protein_gkg:       2.0,
+    fat_gkg:           0.8,
+    // Circunferencias y pliegues Lee et al. (2000)
+    arm_circ:          '',
+    arm_contracted:    '',
+    abdomen_circ:      '',
+    thigh_circ:        '',
+    calf_circ:         '',
+    tricep_mm:         '',
+    thigh_mm:          '',
+    calf_mm:           '',
 });
+
+// ─── Constantes de plan nutricional ──────────────────────────────────────────
+const activityFactors = [
+    { value: 1.2,   label: 'Sedentario',  desc: 'Sin ejercicio' },
+    { value: 1.375, label: 'Ligero',      desc: '1-3 días/semana' },
+    { value: 1.55,  label: 'Moderado',    desc: '3-5 días/semana' },
+    { value: 1.725, label: 'Activo',      desc: '6-7 días/semana' },
+    { value: 1.9,   label: 'Muy Activo',  desc: 'Intenso diario' },
+];
+
+const prescriptionTypes = [
+    { value: 'maintenance', label: 'Mantenimiento', mod: '',     activeClass: 'bg-primary-container border-primary text-on-primary-container' },
+    { value: 'bulk',        label: 'Volumen',        mod: '+10%', activeClass: 'bg-tertiary-container border-tertiary text-on-tertiary-container' },
+    { value: 'cut',         label: 'Definición',     mod: '-10%', activeClass: 'bg-secondary-container border-secondary text-on-secondary-container' },
+];
 
 // ─── IMC calculado ────────────────────────────────────────────────────────────
 const bmi = computed(() => {
     const w = parseFloat(form.value.weight);
-    const h = parseFloat(props.patient.height);
+    const h = parseFloat(form.value.height);
     if (!w || !h) return null;
     const hm = h / 100;
     return (w / (hm * hm)).toFixed(1);
@@ -498,6 +828,104 @@ const weightDiff = computed(() => {
     return current - previous;
 });
 
+// ─── Plan Nutricional: GEB / GET / Macros ────────────────────────────────────
+const patientAge = computed(() => {
+    if (!props.patient.birthDate) return null;
+    const birth = new Date(props.patient.birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+});
+
+const isFemale = computed(() => props.patient.gender !== 'male');
+
+const gebHarris = computed(() => {
+    const w = parseFloat(form.value.weight);
+    const h = parseFloat(form.value.height);
+    const a = patientAge.value;
+    if (!w || !h || !a) return null;
+    return isFemale.value
+        ? Math.round(655 + (9.6 * w) + (1.8 * h) - (4.7 * a))
+        : Math.round(65.5 + (13.75 * w) + (5.003 * h) - (6.775 * a));
+});
+
+const gebMifflin = computed(() => {
+    const w = parseFloat(form.value.weight);
+    const h = parseFloat(form.value.height);
+    const a = patientAge.value;
+    if (!w || !h || !a) return null;
+    return isFemale.value
+        ? Math.round((10 * w) + (6.25 * h) - (5 * a) - 161)
+        : Math.round((10 * w) + (6.25 * h) - (5 * a) + 5);
+});
+
+const gebOwen = computed(() => {
+    const w = parseFloat(form.value.weight);
+    if (!w) return null;
+    return isFemale.value
+        ? Math.round(795 + (7.18 * w))
+        : Math.round(879 + (10.2 * w));
+});
+
+const gebKatch = computed(() => {
+    const w  = parseFloat(form.value.weight);
+    const bf = parseFloat(form.value.body_fat);
+    if (!w || !bf) return null;
+    const leanMass = w * (1 - bf / 100);
+    return Math.round(370 + (21.6 * leanMass));
+});
+
+const gebAverage = computed(() => {
+    const vals = [gebHarris.value, gebMifflin.value, gebOwen.value, gebKatch.value].filter(v => v !== null);
+    if (!vals.length) return null;
+    return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+});
+
+const getTotal = computed(() => {
+    if (!gebAverage.value) return null;
+    return Math.round(gebAverage.value * parseFloat(form.value.activity_factor));
+});
+
+const prescribedKcal = computed(() => {
+    if (!getTotal.value) return null;
+    if (form.value.prescription_type === 'bulk') return Math.round(getTotal.value * 1.10);
+    if (form.value.prescription_type === 'cut')  return Math.round(getTotal.value * 0.90);
+    return getTotal.value;
+});
+
+const macros = computed(() => {
+    const w    = parseFloat(form.value.weight);
+    const kcal = prescribedKcal.value;
+    const proGkg = parseFloat(form.value.protein_gkg) || 0;
+    const lipGkg = parseFloat(form.value.fat_gkg)     || 0;
+    if (!w || !kcal) return null;
+
+    const proG    = proGkg * w;
+    const proKcal = proG * 4;
+    const lipG    = lipGkg * w;
+    const lipKcal = lipG * 9;
+    const choKcal = Math.max(0, kcal - proKcal - lipKcal);
+    const choG    = choKcal / 4;
+
+    return {
+        protein: { gkg: proGkg,                  g: proG.toFixed(1),  kcal: Math.round(proKcal), pct: Math.round(proKcal / kcal * 100) },
+        fat:     { gkg: lipGkg,                  g: lipG.toFixed(1),  kcal: Math.round(lipKcal), pct: Math.round(lipKcal / kcal * 100) },
+        carbs:   { gkg: (choG / w).toFixed(2),   g: choG.toFixed(1),  kcal: Math.round(choKcal), pct: Math.round(choKcal / kcal * 100) },
+    };
+});
+
+// ─── Masa Magra ───────────────────────────────────────────────────────────────
+// Fórmula: Masa Magra = Peso(kg) - (% Grasa / 100 × Peso(kg))
+//                     = Peso × (1 - %Grasa / 100)
+const leanMass = computed(() => {
+    const w  = parseFloat(form.value.weight);
+    const bf = parseFloat(form.value.body_fat);
+    if (!w || !bf) return null;
+    return parseFloat((w * (1 - bf / 100)).toFixed(2));
+});
+
 // ─── Modal de finalización ────────────────────────────────────────────────────
 const showFinishModal = ref(false);
 const finishing       = ref(false);
@@ -510,12 +938,36 @@ function submitFinish() {
     finishing.value = true;
     router.post(route('citas.finish', props.appointment.id), {
         weight:         form.value.weight       || null,
+        height:         form.value.height       || null,
         body_fat:       form.value.body_fat     || null,
-        muscle_mass:    form.value.muscle_mass  || null,
+        muscle_mass:    leanMass.value          || null,
         waist:          form.value.waist        || null,
         hip:            form.value.hip          || null,
         blood_pressure: form.value.blood_pressure || null,
         summary:        form.value.summary      || null,
+        // Plan nutricional
+        activity_factor:   form.value.activity_factor   || null,
+        prescription_type: form.value.prescription_type || 'maintenance',
+        prescribed_kcal:   prescribedKcal.value         || null,
+        protein_gkg:       form.value.protein_gkg       || null,
+        fat_gkg:           form.value.fat_gkg           || null,
+        // GEB calculado
+        geb_harris:  gebHarris.value,
+        geb_mifflin: gebMifflin.value,
+        geb_owen:    gebOwen.value,
+        geb_katch:   gebKatch.value,
+        geb_average: gebAverage.value,
+        get_total:   getTotal.value,
+        // Circunferencias y pliegues Lee et al. (2000)
+        arm_circ:        form.value.arm_circ        || null,
+        arm_contracted:  form.value.arm_contracted  || null,
+        abdomen_circ:    form.value.abdomen_circ    || null,
+        thigh_circ:      form.value.thigh_circ      || null,
+        calf_circ:       form.value.calf_circ   || null,
+        tricep_skinfold: form.value.tricep_mm   || null,
+        thigh_skinfold:  form.value.thigh_mm    || null,
+        calf_skinfold:   form.value.calf_mm     || null,
+        muscle_mass_method: leanMass.value ? 'lean_mass_formula' : null,
     }, {
         onFinish: () => { finishing.value = false; },
     });

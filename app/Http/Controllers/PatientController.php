@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ConsultationRecord;
 use App\Models\PatientProfile;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -86,5 +87,86 @@ class PatientController extends Controller
         });
 
         return redirect()->route('pacientes')->with('success', 'Paciente registrado correctamente.');
+    }
+
+    public function show(Request $request, int $id)
+    {
+        $profile = PatientProfile::with('user')
+            ->where('id', $id)
+            ->where('nutritionist_id', $request->user()->id)
+            ->firstOrFail();
+
+        $user = $profile->user;
+
+        // Historial de consultas (más reciente primero)
+        $records = ConsultationRecord::where('patient_id', $user->id)
+            ->with('appointment')
+            ->orderByDesc('recorded_at')
+            ->get();
+
+        // Última consulta para métricas actuales
+        $latest = $records->first();
+
+        // Calcular tendencia: diferencia con la anterior
+        $previous = $records->skip(1)->first();
+        $weightDiff    = ($latest && $previous && $latest->weight && $previous->weight)
+            ? round($latest->weight - $previous->weight, 1) : null;
+        $bodyFatDiff   = ($latest && $previous && $latest->body_fat_percentage && $previous->body_fat_percentage)
+            ? round($latest->body_fat_percentage - $previous->body_fat_percentage, 1) : null;
+        $muscleDiff    = ($latest && $previous && $latest->muscle_mass && $previous->muscle_mass)
+            ? round($latest->muscle_mass - $previous->muscle_mass, 1) : null;
+
+        // Historial para gráfica (últimas 6 consultas)
+        $chartData = $records->take(6)->reverse()->values()->map(fn($r) => [
+            'label'  => $r->recorded_at->format('M'),
+            'weight' => $r->weight,
+            'fat'    => $r->body_fat_percentage,
+            'muscle' => $r->muscle_mass,
+        ]);
+
+        // Timeline de consultas
+        $timeline = $records->map(fn($r) => [
+            'id'        => $r->id,
+            'date'      => $r->recorded_at->translatedFormat('d M, Y'),
+            'weight'    => $r->weight,
+            'fat'       => $r->body_fat_percentage,
+            'muscle'    => $r->muscle_mass,
+            'bmi'       => $r->bmi,
+            'summary'   => $r->appointment?->summary ?? null,
+        ]);
+
+        // Edad
+        $age = $user->birth_date ? $user->birth_date->diffInYears(now()) : null;
+
+        return Inertia::render('PatientRecord', [
+            'patient' => [
+                'id'        => '#CS-' . str_pad($profile->id, 4, '0', STR_PAD_LEFT),
+                'profileId' => $profile->id,
+                'name'      => $user->full_name,
+                'email'     => $user->email,
+                'phone'     => $user->phone,
+                'avatar'    => $user->avatar,
+                'age'       => $age,
+                'gender'    => $user->gender,
+                'height'    => $profile->height,
+                'birthDate' => $user->birth_date?->toDateString(),
+                'goal'      => $this->goalLabels[$profile->nutrition_goal] ?? 'Sin objetivo',
+                'status'    => $this->statusLabels[$profile->status] ?? $profile->status,
+                'notes'     => $profile->notes,
+                'memberSince' => $profile->created_at->translatedFormat('M Y'),
+            ],
+            'latest' => $latest ? [
+                'weight'    => $latest->weight,
+                'fat'       => $latest->body_fat_percentage,
+                'muscle'    => $latest->muscle_mass,
+                'bmi'       => $latest->bmi,
+                'waist'     => $latest->waist_cm,
+                'hip'       => $latest->hip_cm,
+                'date'      => $latest->recorded_at->translatedFormat('d M, Y'),
+            ] : null,
+            'trends'    => compact('weightDiff', 'bodyFatDiff', 'muscleDiff'),
+            'timeline'  => $timeline,
+            'chartData' => $chartData,
+        ]);
     }
 }

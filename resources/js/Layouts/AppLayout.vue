@@ -3,8 +3,10 @@
         <!-- Sidebar -->
         <aside class="bg-slate-50 h-screen w-64 fixed left-0 top-0 overflow-y-auto flex flex-col py-4 z-50">
             <div class="text-xl font-bold text-emerald-900 px-6 py-8 font-headline">
-                Dr. Nutrición
-                <div class="text-xs font-normal text-on-surface-variant mt-1">Especialista Clínico</div>
+                {{ authUser?.role_key === 'admin' ? 'Panel Admin' : 'Dr. Nutrición' }}
+                <div class="text-xs font-normal text-on-surface-variant mt-1">
+                    {{ authUser?.role_key === 'admin' ? 'Administrador' : 'Especialista Clínico' }}
+                </div>
             </div>
             <nav class="flex-1 px-4 space-y-2">
                 <Link
@@ -90,13 +92,21 @@ const page = usePage();
 const currentUrl = computed(() => page.url);
 const authUser = computed(() => page.props.auth?.user);
 
-const navItems = [
-    { href: '/',           icon: 'dashboard',       label: 'Dashboard' },
-    { href: '/pacientes',  icon: 'group',           label: 'Pacientes' },
-    { href: '/calendario', icon: 'calendar_today',  label: 'Calendario' },
-    { href: '/planes',     icon: 'restaurant_menu', label: 'Planes Alimenticios' },
-    { href: '/config',     icon: 'settings',        label: 'Configuración' },
-];
+const navItems = computed(() => {
+    if (authUser.value?.role_key === 'admin') {
+        return [
+            { href: '/admin',             icon: 'admin_panel_settings', label: 'Panel Admin' },
+            { href: '/admin/nutriologos', icon: 'medical_services',     label: 'Nutriólogos' },
+        ];
+    }
+    return [
+        { href: '/',           icon: 'dashboard',       label: 'Dashboard' },
+        { href: '/pacientes',  icon: 'group',           label: 'Pacientes' },
+        { href: '/calendario', icon: 'calendar_today',  label: 'Calendario' },
+        { href: '/planes',     icon: 'restaurant_menu', label: 'Planes Alimenticios' },
+        { href: '/config',     icon: 'settings',        label: 'Configuración' },
+    ];
+});
 
 function isActive(href) {
     if (href === '/') return currentUrl.value === '/';

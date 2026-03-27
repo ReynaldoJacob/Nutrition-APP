@@ -123,9 +123,27 @@
                                 </span>
                             </td>
                             <td class="px-8 py-5 text-right">
-                                <button class="p-2 text-outline hover:text-primary transition-colors rounded-lg hover:bg-surface-container-high">
-                                    <span class="material-symbols-outlined">more_vert</span>
-                                </button>
+                                <div class="relative inline-block">
+                                    <button
+                                        class="p-2 text-outline hover:text-primary transition-colors rounded-lg hover:bg-surface-container-high"
+                                        @click.stop="activeMenu = activeMenu === patient.id ? null : patient.id"
+                                    >
+                                        <span class="material-symbols-outlined">more_vert</span>
+                                    </button>
+                                    <!-- Dropdown -->
+                                    <div
+                                        v-if="activeMenu === patient.id"
+                                        class="absolute right-0 mt-1 w-48 bg-surface rounded-2xl shadow-lg border border-outline-variant z-10 overflow-hidden"
+                                    >
+                                        <Link
+                                            :href="route('pacientes.show', patient.profileId)"
+                                            class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors"
+                                        >
+                                            <span class="material-symbols-outlined text-primary" style="font-size:18px">folder_open</span>
+                                            Ver Expediente
+                                        </Link>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -183,8 +201,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import NewPatientModal from '@/Components/NewPatientModal.vue';
 
@@ -199,6 +217,11 @@ const filterStatus        = ref('');
 const filterDate          = ref('');
 const currentPage         = ref(1);
 const showNewPatientModal = ref(false);
+const activeMenu          = ref(null);
+
+function closeMenu() { activeMenu.value = null; }
+onMounted(()  => document.addEventListener('click', closeMenu));
+onUnmounted(() => document.removeEventListener('click', closeMenu));
 
 function onPatientSaved() {
     router.reload();

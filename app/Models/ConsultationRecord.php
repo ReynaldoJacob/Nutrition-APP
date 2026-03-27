@@ -21,6 +21,16 @@ class ConsultationRecord extends Model
         'chest_cm',
         'arm_cm',
         'thigh_cm',
+        // Circunferencias Lee et al.
+        'arm_circ_cm',
+        'arm_contracted_cm',
+        'abdomen_cm',
+        'thigh_circ_cm',
+        'calf_circ_cm',
+        'tricep_skinfold_mm',
+        'thigh_skinfold_mm',
+        'calf_skinfold_mm',
+        'muscle_mass_method',
         'blood_pressure',
         'heart_rate',
         'glucose',
@@ -28,6 +38,18 @@ class ConsultationRecord extends Model
         'bone_mass',
         'body_water_percentage',
         'recorded_at',
+        // Plan nutricional
+        'geb_harris',
+        'geb_mifflin',
+        'geb_owen',
+        'geb_katch',
+        'geb_average',
+        'activity_factor',
+        'get_total',
+        'prescription_type',
+        'prescribed_kcal',
+        'protein_gkg',
+        'fat_gkg',
     ];
 
     protected $casts = [
@@ -41,10 +63,30 @@ class ConsultationRecord extends Model
         'chest_cm'             => 'decimal:2',
         'arm_cm'               => 'decimal:2',
         'thigh_cm'             => 'decimal:2',
+        // Circunferencias Lee et al.
+        'arm_circ_cm'          => 'decimal:2',
+        'arm_contracted_cm'    => 'decimal:2',
+        'abdomen_cm'           => 'decimal:2',
+        'thigh_circ_cm'        => 'decimal:2',
+        'calf_circ_cm'         => 'decimal:2',
+        'tricep_skinfold_mm'   => 'decimal:2',
+        'thigh_skinfold_mm'    => 'decimal:2',
+        'calf_skinfold_mm'     => 'decimal:2',
         'visceral_fat'         => 'decimal:2',
         'bone_mass'            => 'decimal:2',
         'body_water_percentage' => 'decimal:2',
         'recorded_at'          => 'datetime',
+        // Plan nutricional
+        'geb_harris'    => 'decimal:2',
+        'geb_mifflin'   => 'decimal:2',
+        'geb_owen'      => 'decimal:2',
+        'geb_katch'     => 'decimal:2',
+        'geb_average'   => 'decimal:2',
+        'activity_factor' => 'decimal:3',
+        'get_total'     => 'decimal:2',
+        'prescribed_kcal' => 'decimal:2',
+        'protein_gkg'   => 'decimal:2',
+        'fat_gkg'       => 'decimal:2',
     ];
 
     public function appointment(): BelongsTo

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
@@ -56,7 +57,7 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
     Route::get('/pacientes', [PatientController::class, 'index'])->name('pacientes');
     Route::post('/pacientes', [PatientController::class, 'store'])->name('pacientes.store');
-    Route::get('/pacientes/{id}', fn($id) => \Inertia\Inertia::render('PatientRecord', ['patientId' => $id]))->name('pacientes.show');
+    Route::get('/pacientes/{id}', [PatientController::class, 'show'])->name('pacientes.show');
 
     Route::get('/calendario', function () {
         $nutritionistId = auth()->id();
@@ -116,4 +117,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/citas/{appointment}/cancelar', [AppointmentController::class, 'cancel'])->name('citas.cancel');
     Route::get('/citas/{appointment}/consulta', [AppointmentController::class, 'start'])->name('citas.start');
     Route::post('/citas/{appointment}/finalizar', [AppointmentController::class, 'finish'])->name('citas.finish');
+
+    // Rutas de administrador
+    Route::middleware('admin')->prefix('admin')->group(function () {
+        Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+        Route::get('/nutriologos', [AdminController::class, 'nutritionists'])->name('admin.nutriologos');
+        Route::post('/nutriologos', [AdminController::class, 'storeNutritionist'])->name('admin.nutriologos.store');
+        Route::patch('/nutriologos/{id}/toggle', [AdminController::class, 'toggleNutritionist'])->name('admin.nutriologos.toggle');
+    });
 });
