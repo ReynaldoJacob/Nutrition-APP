@@ -45,7 +45,13 @@
                     />
                     <div>
                         <p class="text-sm font-bold font-headline">{{ authUser?.full_name }}</p>
-                        <p class="text-xs text-on-surface-variant">Clínica Norte</p>
+                        <p v-if="authUser?.role_key === 'admin'" class="text-xs text-on-surface-variant">Administrador</p>
+                        <span
+                            v-else
+                            :class="planBadgeClasses"
+                        >
+                            {{ subscriptionPlanLabel }}
+                        </span>
                     </div>
                 </div>
                 <button
@@ -149,6 +155,23 @@ import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue';
 const page = usePage();
 const currentUrl = computed(() => page.url);
 const authUser = computed(() => page.props.auth?.user);
+const subscriptionPlanLabel = computed(() => {
+    const key = authUser.value?.subscription_plan_key ?? 'free';
+    const labels = {
+        free: 'Free',
+        normal: 'Normal',
+        pro: 'PRO',
+    };
+    return labels[key] ?? 'Free';
+});
+const isProPlan = computed(() => (authUser.value?.subscription_plan_key ?? 'free') === 'pro');
+const planBadgeClasses = computed(() => {
+    if (isProPlan.value) {
+        return 'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-[0.08em] bg-amber-50/90 text-amber-700 border border-amber-200/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]';
+    }
+
+    return 'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-[0.08em] bg-surface-container-low/90 text-on-surface-variant border border-outline-variant/35';
+});
 const isDark = ref(document.documentElement.classList.contains('dark'));
 const showNotifications = ref(false);
 const notificationItems = ref([]);

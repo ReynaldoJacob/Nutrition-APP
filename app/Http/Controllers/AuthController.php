@@ -27,7 +27,27 @@ class AuthController extends Controller
 
     public function showRegister(): Response
     {
-        return Inertia::render('Register');
+        $catalog = config('plans.catalog', []);
+        $selectedPlan = request()->query('plan', config('plans.default_plan', 'free'));
+
+        if (! is_string($selectedPlan) || ! array_key_exists($selectedPlan, $catalog)) {
+            $selectedPlan = (string) config('plans.default_plan', 'free');
+        }
+
+        $plans = collect($catalog)
+            ->values()
+            ->map(fn(array $plan) => [
+                'key' => $plan['key'],
+                'name' => $plan['name'],
+                'price' => $plan['price'],
+                'period' => $plan['period'],
+            ])
+            ->all();
+
+        return Inertia::render('Register', [
+            'plans' => $plans,
+            'selectedPlan' => $selectedPlan,
+        ]);
     }
 
     public function showVerifyOtp(Request $request): Response
@@ -83,11 +103,21 @@ class AuthController extends Controller
             'name'              => ['required', 'string', 'max:150'],
             'email'             => ['required', 'email', 'max:255', 'unique:users,email'],
             'professional_info' => ['required', 'string', 'max:150'],
+            'plan_key'          => ['required', 'string'],
             'password'          => ['required', 'string', 'min:8', 'confirmed'],
             'terms'             => ['accepted'],
         ], [
             'terms.accepted' => 'Debes aceptar los términos para crear tu cuenta.',
         ]);
+
+        $catalog = config('plans.catalog', []);
+        if (! array_key_exists($data['plan_key'], $catalog)) {
+            return back()->withErrors([
+                'plan_key' => 'El plan seleccionado no es valido.',
+            ])->withInput();
+        }
+
+        $selectedPlan = $catalog[$data['plan_key']];
 
         $parts = preg_split('/\s*\/\s*/', trim($data['professional_info']), 2);
         $specialization = null;
@@ -115,7 +145,7 @@ class AuthController extends Controller
         $firstName = $nameParts[0];
         $lastName = $nameParts[1] ?? '-';
 
-        $user = DB::transaction(function () use ($data, $firstName, $lastName, $specialization, $licenseNumber) {
+        $user = DB::transaction(function () use ($data, $firstName, $lastName, $specialization, $licenseNumber, $selectedPlan) {
             $user = User::create([
                 'first_name' => $firstName,
                 'last_name'  => $lastName,
@@ -129,6 +159,12 @@ class AuthController extends Controller
                 'user_id'        => $user->id,
                 'license_number' => $licenseNumber,
                 'specialization' => $specialization,
+                'subscription_plan_key'    => (string) $selectedPlan['key'],
+                'subscribed_at'            => now(),
+                // Planes de pago duran 1 mes; free nunca vence (null).
+                'subscription_expires_at'  => $selectedPlan['key'] !== 'free'
+                    ? now()->addMonth()
+                    : null,
             ]);
 
             return $user;

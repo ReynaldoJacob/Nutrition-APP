@@ -8,10 +8,13 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class PatientController extends Controller
 {
+    private const FREE_PLAN_MAX_PATIENTS = 5;
+
     private array $goalLabels = [
         'weight_loss'  => 'Pérdida de Peso',
         'weight_gain'  => 'Aumento de Peso',
@@ -27,8 +30,10 @@ class PatientController extends Controller
 
     public function index(Request $request)
     {
+        $nutritionistId = $request->user()->id;
+
         $patients = PatientProfile::with('user')
-            ->where('nutritionist_id', $request->user()->id)
+            ->where('nutritionist_id', $nutritionistId)
             ->get()
             ->map(fn($p) => [
                 'id'        => '#CS-' . str_pad($p->id, 4, '0', STR_PAD_LEFT),
@@ -42,13 +47,36 @@ class PatientController extends Controller
                 'status'    => $this->statusLabels[$p->status] ?? $p->status,
             ]);
 
+        $request->user()->loadMissing('nutritionistProfile');
+        $planKey = $request->user()->nutritionistProfile?->effectivePlanKey() ?? 'free';
+        $patientsCount = PatientProfile::where('nutritionist_id', $nutritionistId)->count();
+        $maxPatients = $planKey === 'free' ? self::FREE_PLAN_MAX_PATIENTS : null;
+
         return Inertia::render('Patients', [
             'patients' => $patients,
+            'patientLimits' => [
+                'planKey' => $planKey,
+                'currentPatients' => $patientsCount,
+                'maxPatients' => $maxPatients,
+                'isLimitReached' => $maxPatients !== null && $patientsCount >= $maxPatients,
+            ],
         ]);
     }
 
     public function store(Request $request)
     {
+        $request->user()->loadMissing('nutritionistProfile');
+        $planKey = $request->user()->nutritionistProfile?->effectivePlanKey() ?? 'free';
+
+        if ($planKey === 'free') {
+            $patientsCount = PatientProfile::where('nutritionist_id', $request->user()->id)->count();
+            if ($patientsCount >= self::FREE_PLAN_MAX_PATIENTS) {
+                throw ValidationException::withMessages([
+                    'plan_limit' => 'Has alcanzado el limite de 5 pacientes del plan Free. Mejora tu plan para continuar.',
+                ]);
+            }
+        }
+
         $data = $request->validate([
             'name'       => ['required', 'string', 'max:150'],
             'email'      => ['required', 'email', 'max:255', 'unique:users,email'],

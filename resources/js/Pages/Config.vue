@@ -52,11 +52,14 @@
                                     <button
                                         type="button"
                                         class="px-4 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold hover:opacity-90 transition-opacity disabled:opacity-60"
-                                        :disabled="isUploadingLogo"
+                                        :disabled="isUploadingLogo || !isProPlan"
                                         @click="triggerLogoPicker"
                                     >
                                         {{ isUploadingLogo ? 'Subiendo...' : 'Subir Imagen' }}
                                     </button>
+                                    <p v-if="!isProPlan" class="mt-2 text-[11px] font-medium text-on-surface-variant">
+                                        Disponible solo en plan Pro.
+                                    </p>
                                     <p v-if="page.props.errors?.clinic_logo" class="mt-2 text-[11px] font-medium text-error">
                                         {{ page.props.errors.clinic_logo }}
                                     </p>
@@ -110,7 +113,10 @@
                                 :src="authUser?.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(authUser?.full_name ?? 'N')}&background=7af9c7&color=004933&size=160`"
                                 class="w-40 h-40 rounded-3xl object-cover border-4 border-surface-container shadow-inner"
                             />
-                            <button class="absolute -bottom-2 -right-2 bg-primary text-on-primary p-2 rounded-xl shadow-lg hover:scale-105 transition-transform">
+                            <button
+                                class="absolute -bottom-2 -right-2 bg-primary text-on-primary p-2 rounded-xl shadow-lg hover:scale-105 transition-transform"
+                                @click="handleProfilePhotoEdit"
+                            >
                                 <span class="material-symbols-outlined text-sm">edit</span>
                             </button>
                         </div>
@@ -123,6 +129,7 @@
                                         v-model="form.fullName"
                                         type="text"
                                         class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all text-sm outline-none"
+                                        :disabled="!isProPlan"
                                     />
                                 </div>
                                 <div class="space-y-1">
@@ -131,6 +138,7 @@
                                         v-model="form.specialization"
                                         type="text"
                                         class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all text-sm outline-none"
+                                        :disabled="!isProPlan"
                                     />
                                 </div>
                                 <div class="space-y-1">
@@ -139,6 +147,7 @@
                                         v-model="form.licenseNumber"
                                         type="text"
                                         class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 transition-all text-sm outline-none"
+                                        :disabled="!isProPlan"
                                     />
                                 </div>
                                 <div class="space-y-1">
@@ -147,7 +156,11 @@
                                         <div class="flex-1 bg-surface-container-high rounded-xl px-4 py-3 italic text-on-surface-variant/60 flex items-center border-2 border-dashed border-outline-variant/30 h-[46px] text-sm">
                                             {{ form.signatureFileName || 'Sin archivo' }}
                                         </div>
-                                        <button class="bg-primary-container text-on-primary-container p-2.5 rounded-xl hover:bg-primary-fixed transition-colors shrink-0">
+                                        <button
+                                            class="bg-primary-container text-on-primary-container p-2.5 rounded-xl hover:bg-primary-fixed transition-colors shrink-0 disabled:opacity-50"
+                                            :disabled="!isProPlan"
+                                            @click.prevent="handleProfilePhotoEdit"
+                                        >
                                             <span class="material-symbols-outlined">upload</span>
                                         </button>
                                     </div>
@@ -348,6 +361,15 @@
                 >Guardar Configuración</button>
             </footer>
 
+            <UpgradePlanModal
+                :show="showUpgradeModal"
+                :title="upgradeModal.title"
+                :message="upgradeModal.message"
+                :cta-label="upgradeModal.ctaLabel"
+                :features="upgradeModal.features"
+                @close="showUpgradeModal = false"
+            />
+
         </div>
     </AppLayout>
 </template>
@@ -356,6 +378,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import UpgradePlanModal from '@/Components/UpgradePlanModal.vue';
 
 // Props enviadas por ConfigController::index()
 const props = defineProps({
@@ -364,6 +387,7 @@ const props = defineProps({
     consultationDuration: { type: Number, default: 45 },
     specialization:       { type: String, default: '' },
     licenseNumber:        { type: String, default: '' },
+    subscriptionPlanKey:  { type: String, default: 'free' },
 });
 
 const page     = usePage();
@@ -372,6 +396,14 @@ const logoInput = ref(null);
 const isUploadingLogo = ref(false);
 const localClinicLogoUrl = ref(null);
 const clinicLogoUrl = computed(() => localClinicLogoUrl.value ?? authUser.value?.clinic_logo_url ?? props.clinicLogoUrl ?? null);
+const isProPlan = computed(() => props.subscriptionPlanKey === 'pro');
+const showUpgradeModal = ref(false);
+const upgradeModal = ref({
+    title: '',
+    message: '',
+    ctaLabel: 'Ver Planes y Mejorar',
+    features: [],
+});
 let logoObjectUrl = null;
 
 // Catálogo de temas
@@ -411,10 +443,20 @@ function resetClinicLogoPreview() {
 }
 
 function triggerLogoPicker() {
+    if (!isProPlan.value) {
+        openUpgradeModal('logo');
+        return;
+    }
+
     logoInput.value?.click();
 }
 
 function handleClinicLogoChange(event) {
+    if (!isProPlan.value) {
+        openUpgradeModal('logo');
+        return;
+    }
+
     const [file] = event.target.files ?? [];
 
     if (!file) {
@@ -456,6 +498,11 @@ function updatePassword() {
 
 // Aplica el tema inmediatamente en el body y guarda en DB via PATCH
 function applyTheme(key) {
+    if (!isProPlan.value) {
+        openUpgradeModal('theme');
+        return;
+    }
+
     form.value.themeColor = key;
 
     // Preview instantáneo: actualizar clase en body
@@ -465,6 +512,52 @@ function applyTheme(key) {
 
     // Persiste en base de datos
     router.patch(route('config.theme'), { theme_color: key }, { preserveScroll: true });
+}
+
+function handleProfilePhotoEdit() {
+    if (!isProPlan.value) {
+        openUpgradeModal('profile-photo');
+        return;
+    }
+}
+
+function openUpgradeModal(context) {
+    if (context === 'theme') {
+        upgradeModal.value = {
+            title: 'El cambio de tema es exclusivo del plan Pro',
+            message: 'Personaliza colores, identidad visual y experiencia completa de tu clinica con el plan Pro.',
+            ctaLabel: 'Ver Planes y Mejorar',
+            features: [
+                { icon: 'palette', label: 'Temas avanzados por clinica' },
+                { icon: 'branding_watermark', label: 'Marca personalizada' },
+                { icon: 'verified', label: 'Experiencia premium' },
+            ],
+        };
+    } else if (context === 'profile-photo') {
+        upgradeModal.value = {
+            title: 'La edicion de perfil es exclusiva del plan Pro',
+            message: 'Para editar datos profesionales y subir foto de perfil necesitas activar el plan Pro.',
+            ctaLabel: 'Ver Planes y Mejorar',
+            features: [
+                { icon: 'photo_camera', label: 'Foto de perfil profesional' },
+                { icon: 'edit_square', label: 'Edicion avanzada de perfil' },
+                { icon: 'verified', label: 'Perfil con mayor confianza' },
+            ],
+        };
+    } else {
+        upgradeModal.value = {
+            title: 'La personalizacion visual es exclusiva del plan Pro',
+            message: 'Para subir logo y desbloquear herramientas visuales avanzadas, mejora tu plan a Pro.',
+            ctaLabel: 'Ver Planes y Mejorar',
+            features: [
+                { icon: 'image', label: 'Logo personalizado de clinica' },
+                { icon: 'palette', label: 'Estilo visual avanzado' },
+                { icon: 'verified', label: 'Marca profesional completa' },
+            ],
+        };
+    }
+
+    showUpgradeModal.value = true;
 }
 
 function saveConfig() {

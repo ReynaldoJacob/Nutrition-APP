@@ -15,7 +15,7 @@
                 </div>
                 <button
                     class="self-start shrink-0 bg-primary text-on-primary px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg hover:opacity-90 transition-opacity active:scale-95"
-                    @click="showNewPatientModal = true"
+                    @click="openNewPatientFlow"
                 >
                     <span class="material-symbols-outlined">person_add</span>
                     Añadir Nuevo Paciente
@@ -186,7 +186,7 @@
         <!-- FAB Mobile -->
         <button
             class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center z-50"
-            @click="showNewPatientModal = true"
+            @click="openNewPatientFlow"
         >
             <span class="material-symbols-outlined">add</span>
         </button>
@@ -196,6 +196,12 @@
             :show="showNewPatientModal"
             @close="showNewPatientModal = false"
             @saved="onPatientSaved"
+            @upgrade-required="onUpgradeRequired"
+        />
+
+        <UpgradePlanModal
+            :show="showUpgradeModal"
+            @close="showUpgradeModal = false"
         />
     </AppLayout>
 </template>
@@ -205,11 +211,21 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import NewPatientModal from '@/Components/NewPatientModal.vue';
+import UpgradePlanModal from '@/Components/UpgradePlanModal.vue';
 
 const props = defineProps({
     patients: {
         type: Array,
         default: () => [],
+    },
+    patientLimits: {
+        type: Object,
+        default: () => ({
+            planKey: 'free',
+            currentPatients: 0,
+            maxPatients: null,
+            isLimitReached: false,
+        }),
     },
 });
 
@@ -217,6 +233,7 @@ const filterStatus        = ref('');
 const filterDate          = ref('');
 const currentPage         = ref(1);
 const showNewPatientModal = ref(false);
+const showUpgradeModal    = ref(false);
 const activeMenu          = ref(null);
 
 function closeMenu() { activeMenu.value = null; }
@@ -225,6 +242,20 @@ onUnmounted(() => document.removeEventListener('click', closeMenu));
 
 function onPatientSaved() {
     router.reload();
+}
+
+function onUpgradeRequired() {
+    showNewPatientModal.value = false;
+    showUpgradeModal.value = true;
+}
+
+function openNewPatientFlow() {
+    if (props.patientLimits?.isLimitReached) {
+        showUpgradeModal.value = true;
+        return;
+    }
+
+    showNewPatientModal.value = true;
 }
 
 const goalClasses = {

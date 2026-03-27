@@ -11,6 +11,7 @@ class ConfigController extends Controller
     public function index()
     {
         $profile = auth()->user()->nutritionistProfile;
+        $planKey = $profile?->effectivePlanKey() ?? 'free';
 
         return Inertia::render('Config', [
             'themeColor'           => $profile?->theme_color ?? 'emerald',
@@ -18,16 +19,24 @@ class ConfigController extends Controller
             'consultationDuration' => $profile?->consultation_duration ?? 45,
             'specialization'       => $profile?->specialization ?? '',
             'licenseNumber'        => $profile?->license_number ?? '',
+            'subscriptionPlanKey'  => $planKey,
         ]);
     }
 
     public function updateTheme(Request $request)
     {
+        $profile = auth()->user()->nutritionistProfile;
+        $planKey = $profile?->effectivePlanKey() ?? 'free';
+
+        if ($planKey !== 'pro') {
+            return back()->withErrors([
+                'plan_limit' => 'La personalizacion de tema esta disponible solo en el plan Pro.',
+            ]);
+        }
+
         $request->validate([
             'theme_color' => ['required', 'string', 'in:emerald,blue,purple,rose,amber'],
         ]);
-
-        $profile = auth()->user()->nutritionistProfile;
 
         if ($profile) {
             $profile->update(['theme_color' => $request->theme_color]);
@@ -38,11 +47,18 @@ class ConfigController extends Controller
 
     public function updateClinicLogo(Request $request)
     {
+        $profile = auth()->user()->nutritionistProfile;
+        $planKey = $profile?->effectivePlanKey() ?? 'free';
+
+        if ($planKey !== 'pro') {
+            return back()->withErrors([
+                'plan_limit' => 'La carga de imagen y personalizacion visual estan disponibles solo en el plan Pro.',
+            ]);
+        }
+
         $request->validate([
             'clinic_logo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
-
-        $profile = auth()->user()->nutritionistProfile;
 
         if (! $profile) {
             return back()->withErrors([

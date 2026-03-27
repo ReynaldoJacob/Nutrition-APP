@@ -6,6 +6,7 @@
                     Clinical Sanctuary
                 </div>
                 <nav class="hidden md:flex gap-8 items-center font-headline text-sm font-semibold tracking-tight">
+                    <Link :href="route('plans')" class="text-on-surface-variant hover:text-primary transition-colors">Planes</Link>
                     <a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Plataforma</a>
                     <a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Especialistas</a>
                     <a class="text-primary font-bold scale-95 active:opacity-80 transition-all" href="#">Support</a>
@@ -79,6 +80,28 @@
                             </div>
                             <p class="text-[11px] text-on-surface-variant ml-1">Tip: puedes usar "Especialidad / Cédula" o solo "Cédula".</p>
                             <p v-if="errors.professional_info" class="text-xs text-error font-medium ml-1">{{ errors.professional_info }}</p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-on-secondary-fixed-variant ml-1">Plan de Metabole</label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                <button
+                                    v-for="plan in plans"
+                                    :key="plan.key"
+                                    type="button"
+                                    @click="form.plan_key = plan.key"
+                                    :class="[
+                                        'rounded-xl border px-3 py-3 text-left transition-all',
+                                        form.plan_key === plan.key
+                                            ? 'border-primary bg-primary/10 shadow-sm'
+                                            : 'border-surface-variant bg-surface-container-high hover:border-primary/50'
+                                    ]"
+                                >
+                                    <p class="text-sm font-bold text-on-surface">{{ plan.name }}</p>
+                                    <p class="text-xs text-on-surface-variant">${{ plan.price }} / {{ plan.period }}</p>
+                                </button>
+                            </div>
+                            <p v-if="errors.plan_key" class="text-xs text-error font-medium ml-1">{{ errors.plan_key }}</p>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -167,6 +190,17 @@
 import { reactive, ref, onMounted } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 
+const props = defineProps({
+    plans: {
+        type: Array,
+        default: () => [],
+    },
+    selectedPlan: {
+        type: String,
+        default: 'free',
+    },
+});
+
 const loading = ref(false);
 const page = usePage();
 
@@ -174,6 +208,7 @@ const form = reactive({
     name: '',
     email: '',
     professional_info: '',
+    plan_key: props.selectedPlan,
     password: '',
     password_confirmation: '',
     terms: false,
@@ -183,6 +218,7 @@ const errors = reactive({
     name: '',
     email: '',
     professional_info: '',
+    plan_key: '',
     password: '',
     terms: '',
 });
@@ -197,6 +233,7 @@ function clearErrors() {
     errors.name = '';
     errors.email = '';
     errors.professional_info = '';
+    errors.plan_key = '';
     errors.password = '';
     errors.terms = '';
 }
@@ -211,6 +248,7 @@ function submit() {
             if (err.name) errors.name = err.name;
             if (err.email) errors.email = err.email;
             if (err.professional_info) errors.professional_info = err.professional_info;
+            if (err.plan_key) errors.plan_key = err.plan_key;
             if (err.password) errors.password = err.password;
             if (err.terms) errors.terms = err.terms;
         },

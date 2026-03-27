@@ -187,7 +187,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['close', 'saved']);
+const emit = defineEmits(['close', 'saved', 'upgrade-required']);
 
 const loading = ref(false);
 const errors  = ref({});
@@ -235,6 +235,10 @@ function submit() {
         onError: (errs) => {
             loading.value = false;
             errors.value  = errs;
+
+            if (errs.plan_limit) {
+                emit('upgrade-required');
+            }
         },
         onFinish: () => {
             loading.value = false;

@@ -6,9 +6,12 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\PricingController;
 use App\Models\Appointment;
 use App\Models\PatientProfile;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/planes', [PricingController::class, 'index'])->name('plans');
 
 // Rutas de autenticación (solo para invitados)
 Route::middleware('guest')->group(function () {

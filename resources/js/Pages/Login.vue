@@ -134,6 +134,10 @@
                         ¿Nuevo en la plataforma?
                         <Link :href="route('register')" class="text-primary font-bold hover:underline ml-1">Crea una cuenta</Link>
                     </p>
+                    <p class="text-xs text-on-surface-variant mt-3">
+                        Revisa nuestros
+                        <Link :href="route('plans')" class="text-primary font-semibold hover:underline ml-1">planes y beneficios</Link>
+                    </p>
                 </footer>
             </div>
 

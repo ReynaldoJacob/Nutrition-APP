@@ -56,6 +56,11 @@ class HandleInertiaRequests extends Middleware
                     'role_key'    => $user->role_key,
                     'avatar'      => $user->avatar,
                     'theme_color' => $user->nutritionistProfile?->theme_color ?? 'emerald',
+                    'subscription_plan_key' => $user->nutritionistProfile?->subscription_plan_key ?? 'free',
+                    'subscription_effective_plan' => $user->nutritionistProfile
+                        ? $user->nutritionistProfile->effectivePlanKey()
+                        : 'free',
+                    'subscription_expires_at' => $user->nutritionistProfile?->subscription_expires_at?->toIso8601String(),
                     'clinic_logo_url' => $user->nutritionistProfile?->clinic_logo_path
                         ? asset('storage/' . $user->nutritionistProfile->clinic_logo_path)
                         : null,
