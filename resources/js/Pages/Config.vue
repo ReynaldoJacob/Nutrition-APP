@@ -389,7 +389,7 @@ const form = ref({
     specialization:       props.specialization,
     licenseNumber:        props.licenseNumber,
     phone:                '',
-    clinicName:           'Nutri App',
+    clinicName:           'Metabolé',
     units:                'metric',
     consultationDuration: props.consultationDuration,
     themeColor:           props.themeColor,
@@ -476,7 +476,7 @@ function resetForm() {
     form.value.specialization       = props.specialization;
     form.value.licenseNumber        = props.licenseNumber;
     form.value.phone                = '';
-    form.value.clinicName           = 'Nutri App';
+    form.value.clinicName           = 'Metabolé';
     form.value.units                = 'metric';
     form.value.consultationDuration = props.consultationDuration;
     form.value.themeColor           = props.themeColor;

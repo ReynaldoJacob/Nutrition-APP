@@ -17,10 +17,10 @@
         <script>
             (function () {
                 try {
-                    var isLoginRoute = window.location.pathname === '/login';
+                    var isAuthPublicRoute = window.location.pathname === '/login' || window.location.pathname === '/registro' || window.location.pathname === '/registro/verificar';
                     var savedMode = localStorage.getItem('theme-mode');
                     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    var useDark = isLoginRoute ? false : (savedMode ? savedMode === 'dark' : prefersDark);
+                    var useDark = isAuthPublicRoute ? false : (savedMode ? savedMode === 'dark' : prefersDark);
                     document.documentElement.classList.toggle('dark', useDark);
                 } catch (e) {
                     // noop

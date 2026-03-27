@@ -68,4 +68,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Appointment::class, 'nutritionist_id');
     }
+
+    public function emailVerificationOtps(): HasMany
+    {
+        return $this->hasMany(EmailVerificationOtp::class);
+    }
 }

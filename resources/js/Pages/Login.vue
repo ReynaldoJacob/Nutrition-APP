@@ -16,7 +16,7 @@
                     <div class="w-16 h-16 bg-primary-container rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                         <span class="material-symbols-outlined text-primary" style="font-size:36px;font-variation-settings:'FILL' 1">spa</span>
                     </div>
-                    <h1 class="font-headline font-extrabold text-3xl text-on-surface tracking-tight mb-2">Nutri App</h1>
+                    <h1 class="font-headline font-extrabold text-3xl text-on-surface tracking-tight mb-2">Metabolé</h1>
                     <p class="text-on-surface-variant text-sm font-medium">Inicia sesión en tu espacio de bienestar</p>
                 </header>
 
@@ -100,6 +100,22 @@
                         {{ errors.general }}
                     </div>
 
+                    <div
+                        v-if="page.props.flash?.success"
+                        class="flex items-center gap-2 p-3 bg-primary-container/50 rounded-xl text-on-primary-container text-sm font-medium"
+                    >
+                        <span class="material-symbols-outlined" style="font-size:18px">check_circle</span>
+                        {{ page.props.flash.success }}
+                    </div>
+
+                    <div
+                        v-if="page.props.flash?.warning"
+                        class="flex items-center gap-2 p-3 bg-secondary-container/70 rounded-xl text-on-secondary-container text-sm font-medium"
+                    >
+                        <span class="material-symbols-outlined" style="font-size:18px">warning</span>
+                        {{ page.props.flash.warning }}
+                    </div>
+
                     <!-- Submit -->
                     <button
                         type="submit"
@@ -116,7 +132,7 @@
                 <footer class="mt-10 pt-8 border-t border-surface-variant/30 text-center">
                     <p class="text-sm text-on-surface-variant font-medium">
                         ¿Nuevo en la plataforma?
-                        <a class="text-primary font-bold hover:underline ml-1" href="#">Crea una cuenta</a>
+                        <Link :href="route('register')" class="text-primary font-bold hover:underline ml-1">Crea una cuenta</Link>
                     </p>
                 </footer>
             </div>
@@ -155,10 +171,11 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 
 const showPassword = ref(false);
 const loading = ref(false);
+const page = usePage();
 
 const form = reactive({
     email: '',
@@ -187,9 +204,9 @@ function submit() {
 
     router.post('/login', form, {
         onError: (err) => {
-            if (err.email)    errors.email    = err.email;
+            if (err.email) errors.email = err.email;
             if (err.password) errors.password = err.password;
-            if (err.general)  errors.general  = err.general;
+            if (err.general) errors.general = err.general;
         },
         onFinish: () => {
             loading.value = false;
