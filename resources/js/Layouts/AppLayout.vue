@@ -37,7 +37,7 @@
                     </div>
                 </div>
                 <button
-                    @click="router.post(route('logout'))"
+                    @click="handleLogout"
                     class="flex items-center gap-3 px-2 py-2 text-slate-500 hover:text-error transition-colors duration-200 group w-full"
                 >
                     <span class="material-symbols-outlined text-xl">logout</span>
@@ -115,6 +115,13 @@ function toggleDarkMode() {
     isDark.value = !isDark.value;
     document.documentElement.classList.toggle('dark', isDark.value);
     localStorage.setItem('theme-mode', isDark.value ? 'dark' : 'light');
+}
+
+function handleLogout() {
+    localStorage.removeItem('theme-mode');
+    document.documentElement.classList.remove('dark');
+    document.body.classList.remove('theme-blue', 'theme-purple', 'theme-rose', 'theme-amber');
+    router.post(route('logout'));
 }
 
 const navItems = computed(() => {

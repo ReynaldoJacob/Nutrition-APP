@@ -17,9 +17,10 @@
         <script>
             (function () {
                 try {
+                    var isLoginRoute = window.location.pathname === '/login';
                     var savedMode = localStorage.getItem('theme-mode');
                     var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    var useDark = savedMode ? savedMode === 'dark' : prefersDark;
+                    var useDark = isLoginRoute ? false : (savedMode ? savedMode === 'dark' : prefersDark);
                     document.documentElement.classList.toggle('dark', useDark);
                 } catch (e) {
                     // noop

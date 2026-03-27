@@ -154,7 +154,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 
 const showPassword = ref(false);
@@ -170,6 +170,13 @@ const errors = reactive({
     email: '',
     password: '',
     general: '',
+});
+
+onMounted(() => {
+    // El login siempre debe iniciar con apariencia original (sin tema de nutriólogo)
+    document.documentElement.classList.remove('dark');
+    document.body.classList.remove('theme-blue', 'theme-purple', 'theme-rose', 'theme-amber');
+    localStorage.setItem('theme-mode', 'light');
 });
 
 function submit() {
