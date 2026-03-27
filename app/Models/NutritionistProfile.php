@@ -26,6 +26,7 @@ class NutritionistProfile extends Model
         'start_time',
         'end_time',
         'theme_color',
+        'clinic_logo_path',
         'is_verified',
         'rating',
         'total_patients',

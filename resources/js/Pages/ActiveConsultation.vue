@@ -4,7 +4,7 @@
         <!-- Top Navigation Bar -->
         <header class="fixed top-0 w-full flex items-center justify-between px-6 py-3 bg-white/80 backdrop-blur-md z-50 shadow-sm">
             <div class="flex items-center gap-6">
-                <div class="text-primary font-extrabold tracking-tight font-headline text-lg">Clinical Sanctuary</div>
+                <div class="text-primary font-extrabold tracking-tight font-headline text-lg">Nutri App</div>
 
                 <!-- Indicador de consulta activa -->
                 <div class="flex items-center gap-2 bg-primary-container/30 px-3 py-1.5 rounded-full">

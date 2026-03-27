@@ -137,6 +137,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/config', [ConfigController::class, 'index'])->name('config');
     Route::patch('/config/theme', [ConfigController::class, 'updateTheme'])->name('config.theme');
+    Route::post('/config/logo', [ConfigController::class, 'updateClinicLogo'])->name('config.logo');
     Route::patch('/notificaciones/vistas', [NotificationController::class, 'markAsSeen'])->name('notifications.seen');
 
     // Rutas de administrador

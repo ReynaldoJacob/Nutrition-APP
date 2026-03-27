@@ -16,7 +16,7 @@
                     <div class="w-16 h-16 bg-primary-container rounded-2xl flex items-center justify-center mb-6 shadow-sm">
                         <span class="material-symbols-outlined text-primary" style="font-size:36px;font-variation-settings:'FILL' 1">spa</span>
                     </div>
-                    <h1 class="font-headline font-extrabold text-3xl text-on-surface tracking-tight mb-2">Clinical Sanctuary</h1>
+                    <h1 class="font-headline font-extrabold text-3xl text-on-surface tracking-tight mb-2">Nutri App</h1>
                     <p class="text-on-surface-variant text-sm font-medium">Inicia sesión en tu espacio de bienestar</p>
                 </header>
 
@@ -107,7 +107,7 @@
                         class="w-full bg-primary text-on-primary font-headline font-bold py-4 rounded-xl shadow-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <span v-if="loading" class="material-symbols-outlined animate-spin" style="font-size:20px">progress_activity</span>
-                        <span v-else>Acceder al Santuario</span>
+                        <span v-else>Acceder</span>
                         <span v-if="!loading" class="material-symbols-outlined" style="font-size:20px">arrow_forward</span>
                     </button>
                 </form>

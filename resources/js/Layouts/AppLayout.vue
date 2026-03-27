@@ -2,10 +2,22 @@
     <div class="bg-surface text-on-surface">
         <!-- Sidebar -->
         <aside class="bg-surface-container-lowest h-screen w-64 fixed left-0 top-0 overflow-y-auto flex flex-col py-4 z-50 border-r border-outline-variant/20">
-            <div class="text-xl font-bold text-on-primary-container px-6 py-8 font-headline">
-                {{ authUser?.role_key === 'admin' ? 'Panel Admin' : 'Dr. Nutrición' }}
-                <div class="text-xs font-normal text-on-surface-variant mt-1">
-                    {{ authUser?.role_key === 'admin' ? 'Administrador' : 'Especialista Clínico' }}
+            <div class="px-6 py-6">
+                <div
+                    v-if="authUser?.role_key !== 'admin' && authUser?.clinic_logo_url"
+                    class="mb-5 rounded-3xl border border-outline-variant/20 bg-surface-container-high p-4 flex items-center justify-center min-h-[112px]"
+                >
+                    <img
+                        :src="authUser.clinic_logo_url"
+                        alt="Logo de la clínica"
+                        class="max-h-20 max-w-full object-contain"
+                    />
+                </div>
+                <div class="text-xl font-bold text-on-primary-container font-headline text-center">
+                    {{ authUser?.role_key === 'admin' ? 'Panel Admin' : 'Dr. Nutrición' }}
+                    <div class="text-xs font-normal text-on-surface-variant mt-1">
+                        {{ authUser?.role_key === 'admin' ? 'Administrador' : 'Especialista Clínico' }}
+                    </div>
                 </div>
             </div>
             <nav class="flex-1 px-4 space-y-2">
@@ -142,6 +154,7 @@ const showNotifications = ref(false);
 const notificationItems = ref([]);
 const unreadCount = ref(0);
 let notificationsChannel = null;
+let notificationAudioContext = null;
 
 watchEffect(() => {
     const shared = page.props.notifications ?? { items: [], unread_count: 0 };
@@ -184,12 +197,50 @@ function closeNotifications() {
 
 function toggleNotifications() {
     showNotifications.value = !showNotifications.value;
+
+    // Desbloquea contexto de audio tras interacción del usuario.
+    if (notificationAudioContext && notificationAudioContext.state === 'suspended') {
+        notificationAudioContext.resume().catch(() => {
+            // noop
+        });
+    }
+
     if (showNotifications.value && unreadCount.value > 0) {
         window.axios.patch(route('notifications.seen')).then(() => {
             unreadCount.value = 0;
         }).catch(() => {
             // noop
         });
+    }
+}
+
+function playNotificationSound() {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+
+        if (!notificationAudioContext) {
+            notificationAudioContext = new AudioCtx();
+        }
+
+        const now = notificationAudioContext.currentTime;
+        const osc = notificationAudioContext.createOscillator();
+        const gain = notificationAudioContext.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(950, now);
+        osc.frequency.exponentialRampToValueAtTime(760, now + 0.14);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.045, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+        osc.connect(gain);
+        gain.connect(notificationAudioContext.destination);
+        osc.start(now);
+        osc.stop(now + 0.17);
+    } catch (e) {
+        // noop
     }
 }
 
@@ -221,6 +272,7 @@ onMounted(() => {
 
             notificationItems.value = notificationItems.value.slice(0, 20);
             unreadCount.value += 1;
+            playNotificationSound();
         });
     }
 });

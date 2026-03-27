@@ -23,18 +23,43 @@
                         <!-- Logo -->
                         <div class="space-y-4">
                             <label class="text-sm font-bold text-on-surface-variant uppercase tracking-wider">Logotipo de la Clínica</label>
+                            <input
+                                ref="logoInput"
+                                type="file"
+                                accept="image/png,image/jpeg,image/jpg,image/webp"
+                                class="hidden"
+                                @change="handleClinicLogoChange"
+                            />
                             <div class="flex items-center gap-6">
-                                <div class="w-24 h-24 bg-surface-container-high rounded-2xl flex items-center justify-center border-2 border-dashed border-outline-variant/50 relative overflow-hidden group cursor-pointer">
-                                    <span class="material-symbols-outlined text-outline-variant text-4xl group-hover:opacity-0 transition-opacity">image</span>
+                                <button
+                                    type="button"
+                                    class="w-24 h-24 bg-surface-container-high rounded-2xl flex items-center justify-center border-2 border-dashed border-outline-variant/50 relative overflow-hidden group cursor-pointer"
+                                    @click="triggerLogoPicker"
+                                >
+                                    <img
+                                        v-if="clinicLogoUrl"
+                                        :src="clinicLogoUrl"
+                                        alt="Logo de la clínica"
+                                        class="w-full h-full object-contain p-3"
+                                    />
+                                    <span v-else class="material-symbols-outlined text-outline-variant text-4xl group-hover:opacity-0 transition-opacity">image</span>
                                     <div class="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                         <span class="material-symbols-outlined text-primary">add_a_photo</span>
                                     </div>
-                                </div>
+                                </button>
                                 <div class="flex-1">
                                     <p class="text-xs text-on-surface-variant mb-3">Sube tu logo profesional (PNG, JPG). Tamaño recomendado: 512×512px.</p>
-                                    <button class="px-4 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold hover:opacity-90 transition-opacity">
-                                        Subir Imagen
+                                    <button
+                                        type="button"
+                                        class="px-4 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold hover:opacity-90 transition-opacity disabled:opacity-60"
+                                        :disabled="isUploadingLogo"
+                                        @click="triggerLogoPicker"
+                                    >
+                                        {{ isUploadingLogo ? 'Subiendo...' : 'Subir Imagen' }}
                                     </button>
+                                    <p v-if="page.props.errors?.clinic_logo" class="mt-2 text-[11px] font-medium text-error">
+                                        {{ page.props.errors.clinic_logo }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -328,13 +353,14 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 // Props enviadas por ConfigController::index()
 const props = defineProps({
     themeColor:           { type: String, default: 'emerald' },
+    clinicLogoUrl:        { type: String, default: null },
     consultationDuration: { type: Number, default: 45 },
     specialization:       { type: String, default: '' },
     licenseNumber:        { type: String, default: '' },
@@ -342,6 +368,11 @@ const props = defineProps({
 
 const page     = usePage();
 const authUser = computed(() => page.props.auth?.user);
+const logoInput = ref(null);
+const isUploadingLogo = ref(false);
+const localClinicLogoUrl = ref(null);
+const clinicLogoUrl = computed(() => localClinicLogoUrl.value ?? authUser.value?.clinic_logo_url ?? props.clinicLogoUrl ?? null);
+let logoObjectUrl = null;
 
 // Catálogo de temas
 const colorThemes = [
@@ -358,7 +389,7 @@ const form = ref({
     specialization:       props.specialization,
     licenseNumber:        props.licenseNumber,
     phone:                '',
-    clinicName:           'Clinical Sanctuary',
+    clinicName:           'Nutri App',
     units:                'metric',
     consultationDuration: props.consultationDuration,
     themeColor:           props.themeColor,
@@ -369,6 +400,55 @@ const whatsappActive = ref(true);
 
 // Contraseña
 const passwordForm = ref({ current: '', new: '' });
+
+function resetClinicLogoPreview() {
+    if (logoObjectUrl) {
+        URL.revokeObjectURL(logoObjectUrl);
+        logoObjectUrl = null;
+    }
+
+    localClinicLogoUrl.value = null;
+}
+
+function triggerLogoPicker() {
+    logoInput.value?.click();
+}
+
+function handleClinicLogoChange(event) {
+    const [file] = event.target.files ?? [];
+
+    if (!file) {
+        return;
+    }
+
+    resetClinicLogoPreview();
+    logoObjectUrl = URL.createObjectURL(file);
+    localClinicLogoUrl.value = logoObjectUrl;
+
+    router.post(route('config.logo'), {
+        clinic_logo: file,
+    }, {
+        forceFormData: true,
+        preserveScroll: true,
+        preserveState: true,
+        onStart: () => {
+            isUploadingLogo.value = true;
+        },
+        onSuccess: () => {
+            resetClinicLogoPreview();
+        },
+        onError: () => {
+            resetClinicLogoPreview();
+        },
+        onFinish: () => {
+            isUploadingLogo.value = false;
+
+            if (logoInput.value) {
+                logoInput.value.value = '';
+            }
+        },
+    });
+}
 
 function updatePassword() {
     // TODO: conectar al endpoint de cambio de contraseña
@@ -396,7 +476,7 @@ function resetForm() {
     form.value.specialization       = props.specialization;
     form.value.licenseNumber        = props.licenseNumber;
     form.value.phone                = '';
-    form.value.clinicName           = 'Clinical Sanctuary';
+    form.value.clinicName           = 'Nutri App';
     form.value.units                = 'metric';
     form.value.consultationDuration = props.consultationDuration;
     form.value.themeColor           = props.themeColor;
@@ -405,4 +485,8 @@ function resetForm() {
     // Revertir tema visual
     applyTheme(props.themeColor);
 }
+
+onBeforeUnmount(() => {
+    resetClinicLogoPreview();
+});
 </script>
