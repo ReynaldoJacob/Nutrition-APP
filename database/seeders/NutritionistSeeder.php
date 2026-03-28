@@ -26,9 +26,9 @@ class NutritionistSeeder extends Seeder
         );
 
         NutritionistProfile::firstOrCreate(
-            ['user_id' => $user->id],
+            ['license_number' => 'NUT-2024-001'],
             [
-                'license_number'        => 'NUT-2024-001',
+                'user_id'               => $user->id,
                 'specialization'        => 'Nutrición Clínica y Deportiva',
                 'biography'             => 'Nutrióloga certificada con más de 8 años de experiencia en nutrición clínica, deportiva y control de peso. Apasionada por transformar hábitos alimenticios y mejorar la calidad de vida de sus pacientes.',
                 'years_experience'      => 8,
