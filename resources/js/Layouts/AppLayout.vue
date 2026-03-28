@@ -316,11 +316,11 @@ const navItems = computed(() => {
         ];
     }
     return [
-        { href: '/',           icon: 'dashboard',       label: 'Dashboard' },
-        { href: '/pacientes',  icon: 'group',           label: 'Pacientes' },
-        { href: '/calendario', icon: 'calendar_today',  label: 'Calendario' },
-        { href: '/planes',     icon: 'restaurant_menu', label: 'Planes Alimenticios' },
-        { href: '/config',     icon: 'settings',        label: 'Configuración' },
+        { href: '/',                    icon: 'dashboard',       label: 'Dashboard' },
+        { href: '/pacientes',           icon: 'group',           label: 'Pacientes' },
+        { href: '/calendario',          icon: 'calendar_today',  label: 'Calendario' },
+        { href: '/planes-alimenticios', icon: 'restaurant_menu', label: 'Planes Alimenticios' },
+        { href: '/config',              icon: 'settings',        label: 'Configuración' },
     ];
 });
 

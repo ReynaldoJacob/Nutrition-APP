@@ -48,5 +48,13 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Límite conservador para mantenerse dentro de cuota diaria de proveedor externo.
+        RateLimiter::for('fatsecret-search', function (Request $request) {
+            return [
+                Limit::perMinute(15)->by('fs-minute:' . ($request->user()?->id ?: $request->ip())),
+                Limit::perDay(500)->by('fs-day:' . ($request->user()?->id ?: $request->ip())),
+            ];
+        });
     }
 }

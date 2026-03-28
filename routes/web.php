@@ -5,6 +5,8 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\NutritionPlanController;
+use App\Http\Controllers\Api\FoodCatalogController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PricingController;
 use App\Models\Appointment;
@@ -146,6 +148,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/config', [ConfigController::class, 'index'])->name('config');
     Route::patch('/config/theme', [ConfigController::class, 'updateTheme'])->name('config.theme');
     Route::post('/config/logo', [ConfigController::class, 'updateClinicLogo'])->name('config.logo');
+
+    Route::get('/api/foods', [FoodCatalogController::class, 'index'])->name('api.foods.index');
+    Route::get('/api/foods/fatsecret/search', [FoodCatalogController::class, 'searchFatSecret'])
+        ->middleware('throttle:fatsecret-search')
+        ->name('api.foods.fatsecret.search');
+
+    Route::get('/planes-alimenticios', [NutritionPlanController::class, 'index'])->name('nutrition-plans.index');
+    Route::get('/planes-alimenticios/{id}', [NutritionPlanController::class, 'show'])->name('nutrition-plans.show');
+    Route::post('/planes-alimenticios', [NutritionPlanController::class, 'store'])->name('nutrition-plans.store');
+    Route::patch('/planes-alimenticios/{id}', [NutritionPlanController::class, 'update'])->name('nutrition-plans.update');
+    Route::delete('/planes-alimenticios/{id}', [NutritionPlanController::class, 'destroy'])->name('nutrition-plans.destroy');
+
     Route::patch('/notificaciones/vistas', [NotificationController::class, 'markAsSeen'])->name('notifications.seen');
 
     // Rutas de administrador

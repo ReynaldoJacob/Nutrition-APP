@@ -31,4 +31,17 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'usda' => [
+        'api_key' => env('USDA_API_KEY'),
+        'base_url' => env('USDA_BASE_URL', 'https://api.nal.usda.gov/fdc/v1'),
+    ],
+
+    'fatsecret' => [
+        'client_id' => env('FATSECRET_CLIENT_ID'),
+        'client_secret' => env('FATSECRET_CLIENT_SECRET'),
+        'scope' => env('FATSECRET_SCOPE', ''),
+        'token_url' => env('FATSECRET_TOKEN_URL', 'https://oauth.fatsecret.com/connect/token'),
+        'api_url' => env('FATSECRET_API_URL', 'https://platform.fatsecret.com/rest/food/autocomplete/v2'),
+    ],
+
 ];
