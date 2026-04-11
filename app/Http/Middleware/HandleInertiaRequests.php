@@ -64,6 +64,7 @@ class HandleInertiaRequests extends Middleware
                     'clinic_logo_url' => $user->nutritionistProfile?->clinic_logo_path
                         ? asset('storage/' . $user->nutritionistProfile->clinic_logo_path)
                         : null,
+                    'must_change_password' => $user->must_change_password ?? false,
                 ] : null,
             ],
             'notifications' => [

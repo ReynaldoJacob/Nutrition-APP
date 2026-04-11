@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ConsultationRecord;
 use App\Models\PatientProfile;
 use App\Models\User;
+use App\Services\PasswordGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -91,18 +92,23 @@ class PatientController extends Controller
         $firstName = $parts[0];
         $lastName  = $parts[1] ?? '-';
 
-        DB::transaction(function () use ($data, $firstName, $lastName, $request) {
-            // Crear usuario sin password (paciente no inicia sesión)
+        $temporaryPassword = PasswordGeneratorService::generateTemporaryPassword();
+        $hashedPassword = bcrypt($temporaryPassword);
+
+        DB::transaction(function () use ($data, $firstName, $lastName, $request, $hashedPassword, $temporaryPassword) {
+            // Crear usuario con contraseña temporal
             $user = User::create([
                 'first_name' => $firstName,
                 'last_name'  => $lastName,
                 'email'      => $data['email'],
-                'password'   => bcrypt(Str::random(32)),
+                'password'   => $hashedPassword,
                 'phone'      => $data['phone'] ?? null,
                 'birth_date' => $data['birth_date'] ?? null,
                 'gender'     => $data['gender'] ?? null,
                 'role_key'   => 'patient',
                 'is_active'  => true,
+                'must_change_password' => true,
+                'temporary_password' => $temporaryPassword,
             ]);
 
             // Crear perfil vinculado al nutriólogo
@@ -114,7 +120,10 @@ class PatientController extends Controller
             ]);
         });
 
-        return redirect()->route('pacientes')->with('success', 'Paciente registrado correctamente.');
+        return redirect()->route('pacientes')->with(
+            'success',
+            "Paciente {$firstName} registrado. Comparte esta contraseña temporal: {$temporaryPassword}"
+        );
     }
 
     public function show(Request $request, int $id)

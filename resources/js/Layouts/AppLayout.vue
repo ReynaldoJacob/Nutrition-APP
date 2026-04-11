@@ -137,6 +137,20 @@
 
             <!-- Page Slot -->
             <div class="flex-1 overflow-y-auto flex flex-col">
+                <div v-if="flashSuccess || flashWarning" class="px-8 pt-6 space-y-3">
+                    <div
+                        v-if="flashSuccess"
+                        class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800"
+                    >
+                        {{ flashSuccess }}
+                    </div>
+                    <div
+                        v-if="flashWarning"
+                        class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800"
+                    >
+                        {{ flashWarning }}
+                    </div>
+                </div>
                 <slot />
             </div>
         </main>
@@ -155,8 +169,11 @@ import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue';
 const page = usePage();
 const currentUrl = computed(() => page.url);
 const authUser = computed(() => page.props.auth?.user);
+const effectivePlanKey = computed(() => authUser.value?.subscription_effective_plan ?? 'free');
+const flashSuccess = computed(() => page.props.flash?.success ?? null);
+const flashWarning = computed(() => page.props.flash?.warning ?? null);
 const subscriptionPlanLabel = computed(() => {
-    const key = authUser.value?.subscription_plan_key ?? 'free';
+    const key = effectivePlanKey.value;
     const labels = {
         free: 'Free',
         normal: 'Normal',
@@ -164,7 +181,7 @@ const subscriptionPlanLabel = computed(() => {
     };
     return labels[key] ?? 'Free';
 });
-const isProPlan = computed(() => (authUser.value?.subscription_plan_key ?? 'free') === 'pro');
+const isProPlan = computed(() => effectivePlanKey.value === 'pro');
 const planBadgeClasses = computed(() => {
     if (isProPlan.value) {
         return 'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold tracking-[0.08em] bg-amber-50/90 text-amber-700 border border-amber-200/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]';
@@ -320,6 +337,7 @@ const navItems = computed(() => {
         { href: '/pacientes',           icon: 'group',           label: 'Pacientes' },
         { href: '/calendario',          icon: 'calendar_today',  label: 'Calendario' },
         { href: '/planes-alimenticios', icon: 'restaurant_menu', label: 'Planes Alimenticios' },
+        ...(isProPlan.value ? [{ href: '/gestor-de-contenido', icon: 'post_add', label: 'Gestor de Contenido' }] : []),
         { href: '/config',              icon: 'settings',        label: 'Configuración' },
     ];
 });

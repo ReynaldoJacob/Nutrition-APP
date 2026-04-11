@@ -27,7 +27,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Metrics Grid -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div class="bg-surface-container-lowest p-6 rounded-xl border-l-4 border-primary">
@@ -40,7 +39,7 @@
                 <div class="bg-surface-container-lowest p-6 rounded-xl">
                     <p class="text-on-surface-variant text-sm font-semibold">Citas Semanales</p>
                     <div class="flex items-center justify-between mt-2">
-                        <span class="text-3xl font-extrabold font-headline">34</span>
+                        <span class="text-3xl font-extrabold font-headline">  {{ appointmentsPerWeekend }}</span>
                         <span class="material-symbols-outlined text-secondary">trending_up</span>
                     </div>
                 </div>
@@ -207,6 +206,7 @@ const props = defineProps({
     todayAppointments: { type: Array,  default: () => [] },
     patients:          { type: Array,  default: () => [] },
     adminNotices:      { type: Array,  default: () => [] },
+    appointmentsPerWeekend:{ type: Number, default: 0 },
 });
 
 const showModal = ref(false);

@@ -94,6 +94,16 @@ class AuthController extends Controller
             $authUser->update(['last_login_at' => now()]);
         }
 
+        // Redirigir a cambio de contraseña si es paciente con contraseña temporal
+        if ($authUser && $authUser->must_change_password === true) {
+            return redirect()->route('auth.change-password-view');
+        }
+
+        // Redirigir según el rol del usuario
+        if ($authUser && $authUser->role_key === 'patient') {
+            return redirect('/paciente/inicio');
+        }
+
         return redirect()->intended('/');
     }
 
@@ -287,6 +297,63 @@ class AuthController extends Controller
             report($e);
             return false;
         }
+    }
+
+    public function showChangePasswordView(): Response|RedirectResponse
+    {
+        $user = Auth::user();
+
+        if (! $user || ! $user->must_change_password) {
+            return redirect('/');
+        }
+
+        return Inertia::render('ChangePassword', [
+            'temporaryPassword' => $user->temporary_password ?? '***',
+        ]);
+    }
+
+    public function changePassword(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (! $user || ! $user->must_change_password) {
+            return redirect('/');
+        }
+
+        $request->validate([
+            'current_password' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($user) {
+                    if (! Hash::check($value, $user->password)) {
+                        $fail('La contraseña actual es incorrecta.');
+                    }
+                },
+            ],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[!@#$%^&*()_+\-=\[\]{};:\'"",.<>?\/\\|`~]/',
+                'confirmed',
+            ],
+        ], [
+            'password.min' => 'La contraseña debe tener mínimo 8 caracteres.',
+            'password.regex' => 'Debe incluir mayúsculas, minúsculas, números y símbolos especiales.',
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+        ]);
+
+        $user->update([
+            'password' => bcrypt($request->string('password')),
+            'must_change_password' => false,
+            'temporary_password' => null,
+        ]);
+
+        return redirect('/')
+            ->with('success', '¡Contraseña actualizada correctamente! Ahora puedes acceder a tu dashboard.');
     }
 
     public function logout(Request $request): RedirectResponse

@@ -4,8 +4,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConfigController;
+use App\Http\Controllers\ContentManagerController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\NutritionPlanController;
+use App\Http\Controllers\PatientDashboardController;
 use App\Http\Controllers\Api\FoodCatalogController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PricingController;
@@ -29,9 +31,29 @@ Route::middleware('guest')->group(function () {
 // Cerrar sesión
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
+// Cambio de contraseña obligatorio (pacientes con contraseña temporal)
+Route::middleware('auth')->group(function () {
+    Route::get('/cambiar-contrasena', [AuthController::class, 'showChangePasswordView'])->name('auth.change-password-view');
+    Route::post('/cambiar-contrasena', [AuthController::class, 'changePassword'])->name('auth.change-password');
+});
+
+// Rutas del Paciente (requieren autenticación)
+Route::middleware('auth')->prefix('paciente')->name('patient.')->group(function () {
+    Route::get('/inicio', [PatientDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/plan', [PatientDashboardController::class, 'plan'])->name('plan');
+    Route::get('/progreso', [PatientDashboardController::class, 'progress'])->name('progress');
+    Route::get('/citas', [PatientDashboardController::class, 'appointments'])->name('appointments');
+    Route::get('/comunidad', [PatientDashboardController::class, 'community'])->name('community');
+});
+
 // Rutas protegidas (requieren autenticación)
 Route::middleware('auth')->group(function () {
     Route::get('/', function () {
+        // Redirigir pacientes a su dashboard
+        if (auth()->user()->role_key === 'patient') {
+            return redirect('/paciente/inicio');
+        }
+
         $nutritionistId = auth()->id();
 
         $total = \App\Models\PatientProfile::where('nutritionist_id', $nutritionistId)->count();
@@ -51,6 +73,11 @@ Route::middleware('auth')->group(function () {
                 'type'        => \App\Models\Appointment::TYPE_LABELS[$a->type] ?? $a->type,
                 'status'      => $a->status,
             ]);
+
+        $appointmentsPerWeekend = \App\Models\Appointment::where('nutritionist_id', $nutritionistId)
+            ->whereBetween('scheduled_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->whereNotIn('status', ['cancelled'])
+            ->count();
 
         $patients = PatientProfile::with('user')
             ->where('nutritionist_id', $nutritionistId)
@@ -80,6 +107,7 @@ Route::middleware('auth')->group(function () {
             'todayAppointments' => $todayAppointments,
             'patients'          => $patients,
             'adminNotices'      => $adminNotices,
+            'appointmentsPerWeekend' => $appointmentsPerWeekend,
         ]);
     })->name('dashboard');
     Route::get('/pacientes', [PatientController::class, 'index'])->name('pacientes');
@@ -148,11 +176,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/config', [ConfigController::class, 'index'])->name('config');
     Route::patch('/config/theme', [ConfigController::class, 'updateTheme'])->name('config.theme');
     Route::post('/config/logo', [ConfigController::class, 'updateClinicLogo'])->name('config.logo');
+    Route::get('/gestor-de-contenido', [ContentManagerController::class, 'index'])->name('content-manager.index');
+    Route::post('/gestor-de-contenido', [ContentManagerController::class, 'store'])->name('content-manager.store');
 
     Route::get('/api/foods', [FoodCatalogController::class, 'index'])->name('api.foods.index');
-    Route::get('/api/foods/fatsecret/search', [FoodCatalogController::class, 'searchFatSecret'])
-        ->middleware('throttle:fatsecret-search')
-        ->name('api.foods.fatsecret.search');
+    Route::get('/api/foods/openfoodfacts/mx/search', [FoodCatalogController::class, 'searchOpenFoodFactsMexico'])
+        ->middleware('throttle:off-search')
+        ->name('api.foods.openfoodfacts.mx.search');
+    Route::get('/api/foods/usda/search', [FoodCatalogController::class, 'searchUsda'])
+        ->middleware('throttle:off-search')
+        ->name('api.foods.usda.search');
 
     Route::get('/planes-alimenticios', [NutritionPlanController::class, 'index'])->name('nutrition-plans.index');
     Route::get('/planes-alimenticios/{id}', [NutritionPlanController::class, 'show'])->name('nutrition-plans.show');

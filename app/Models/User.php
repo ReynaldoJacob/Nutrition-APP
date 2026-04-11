@@ -27,6 +27,8 @@ class User extends Authenticatable
         'is_active',
         'last_login_at',
         'avatar',
+        'must_change_password',
+        'temporary_password',
     ];
 
     protected $hidden = [
@@ -40,6 +42,7 @@ class User extends Authenticatable
         'last_login_at'     => 'datetime',
         'notifications_last_seen_at' => 'datetime',
         'is_active'         => 'boolean',
+        'must_change_password' => 'boolean',
     ];
 
     public function getFullNameAttribute(): string
@@ -55,6 +58,11 @@ class User extends Authenticatable
     public function patientProfile(): HasOne
     {
         return $this->hasOne(PatientProfile::class);
+    }
+
+    public function contentItems(): HasMany
+    {
+        return $this->hasMany(ContentItem::class, 'nutritionist_id');
     }
 
     // Citas como paciente

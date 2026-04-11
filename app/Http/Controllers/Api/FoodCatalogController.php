@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Food;
-use App\Services\FatSecretPlatformService;
+use App\Services\OpenFoodFactsService;
+use App\Services\UsdaFoodDataCentralService;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
 
@@ -36,28 +37,38 @@ class FoodCatalogController extends Controller
         ]);
     }
 
-    public function searchFatSecret(Request $request, FatSecretPlatformService $fatSecret)
+    public function searchOpenFoodFactsMexico(Request $request, OpenFoodFactsService $openFoodFacts)
     {
         $validated = $request->validate([
             'query' => ['required', 'string', 'min:2', 'max:120'],
-            'limit' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:25'],
         ]);
 
-        if (! $fatSecret->isConfigured()) {
-            return response()->json([
-                'message' => 'Credenciales de FatSecret no configuradas.',
-            ], 422);
-        }
-
         try {
-            $results = $fatSecret->autocomplete($validated['query'], min($validated['limit'] ?? 8, 10));
+            $results = $openFoodFacts->searchMexico($validated['query'], (int) ($validated['limit'] ?? 12));
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return response()->json([
+                'message' => 'No se pudo conectar con Open Food Facts. Verifica tu conexion o intenta mas tarde.',
+            ], 502);
+        } catch (RequestException $e) {
+            $status = $e->response?->status();
+            if ($status === 503) {
+                return response()->json([
+                    'message' => 'Open Food Facts no esta disponible en este momento. Intenta en unos minutos.',
+                ], 503);
+            }
+            return response()->json([
+                'message' => 'Error al consultar Open Food Facts Mexico.',
+                'detail' => $e->response?->json('status_verbose') ?? 'HTTP ' . $status,
+            ], 502);
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 503);
         } catch (\Throwable $e) {
             return response()->json([
-                'message' => 'Error al consultar FatSecret.',
-                'detail' => $e instanceof RequestException
-                    ? ($e->response?->json('error.message') ?? $e->getMessage())
-                    : $e->getMessage(),
-            ], 502);
+                'message' => 'Error inesperado al consultar Open Food Facts Mexico.',
+            ], 500);
         }
 
         return response()->json([
@@ -65,10 +76,31 @@ class FoodCatalogController extends Controller
         ]);
     }
 
-    public function importFromFatSecret(Request $request, FatSecretPlatformService $fatSecret)
+    public function searchUsda(Request $request, UsdaFoodDataCentralService $usda)
     {
-        return response()->json([
-            'message' => 'La importacion de contenido externo esta deshabilitada por cumplimiento de terminos de FatSecret.',
-        ], 403);
+        $validated = $request->validate([
+            'query' => ['required', 'string', 'min:2', 'max:120'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:25'],
+        ]);
+
+        if (! $usda->isConfigured()) {
+            return response()->json([
+                'message' => 'La clave de USDA no esta configurada. Agrega USDA_API_KEY en tu .env.',
+            ], 422);
+        }
+
+        try {
+            $results = $usda->searchFoods($validated['query'], (int) ($validated['limit'] ?? 12));
+        } catch (RequestException $e) {
+            return response()->json([
+                'message' => 'Error al consultar USDA FoodData Central.',
+            ], 502);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Error inesperado al consultar USDA.',
+            ], 500);
+        }
+
+        return response()->json(['data' => $results]);
     }
 }

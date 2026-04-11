@@ -23,11 +23,11 @@ const meals = ref({
 })
 
 const foodDatabase = ref([])
-const fatSecretResults = ref([])
+const openFoodFactsResults = ref([])
 const isLoadingFoods = ref(false)
-const isSearchingFatSecret = ref(false)
+const isSearchingOpenFoodFacts = ref(false)
 const localSearchError = ref('')
-const fatSecretSearchError = ref('')
+const openFoodFactsSearchError = ref('')
 
 const fallbackFoods = [
     { id: 'fb-1', name: 'Pechuga de pollo', portion: '100g', calories: 165, protein: 31, carbs: 0, fat: 3.6 },
@@ -70,6 +70,27 @@ const normalizeFood = (food) => ({
     carbs: Number(food.carbs || 0),
     fat: Number(food.fat || 0),
 })
+
+const normalizeOffProduct = (item) => {
+    const code = item.code ?? ''
+    if (!code) return null
+
+    const name = (item.product_name_es || item.product_name || item.generic_name_es || item.generic_name || '').trim()
+    if (!name) return null
+
+    const n = item.nutriments || {}
+
+    return {
+        id: code,
+        external_id: code,
+        name,
+        portion: '100g',
+        calories: Number(n['energy-kcal_100g'] ?? n['energy-kcal'] ?? 0),
+        protein: Number(n.proteins_100g ?? n.proteins ?? 0),
+        carbs: Number(n.carbohydrates_100g ?? n.carbohydrates ?? 0),
+        fat: Number(n.fat_100g ?? n.fat ?? 0),
+    }
+}
 
 const fallbackFilter = (query) => {
     const q = query.trim().toLowerCase()
@@ -121,15 +142,16 @@ const loadFoods = async () => {
     }
 }
 
-const searchInFatSecret = async () => {
+const searchInOpenFoodFactsMexico = async () => {
     if (searchQuery.value.trim().length < 2) return
 
-    isSearchingFatSecret.value = true
-    fatSecretSearchError.value = ''
+    isSearchingOpenFoodFacts.value = true
+    openFoodFactsSearchError.value = ''
+    openFoodFactsResults.value = []
 
     try {
         const params = new URLSearchParams({ query: searchQuery.value.trim(), limit: '12' })
-        const response = await fetch(`/api/foods/fatsecret/search?${params.toString()}`, {
+        const response = await fetch(`/api/foods/usda/search?${params.toString()}`, {
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -139,24 +161,26 @@ const searchInFatSecret = async () => {
         const payload = await parseResponse(response)
 
         if (!response.ok || !payload) {
-            const detail = payload?.detail ? ` ${payload.detail}` : ''
-            throw new Error((payload?.message || 'No se pudo buscar en FatSecret.') + detail)
+            throw new Error(payload?.message || `Error al buscar alimentos (HTTP ${response.status}).`)
         }
 
-        fatSecretResults.value = (payload.data || []).map(normalizeFood)
-        if (fatSecretResults.value.length === 0) {
-            fatSecretSearchError.value = 'FatSecret no devolvio sugerencias para ese termino.'
+        openFoodFactsResults.value = (payload.data || []).map(normalizeFood)
+
+        if (openFoodFactsResults.value.length === 0) {
+            openFoodFactsSearchError.value = 'No se encontraron resultados para ese termino.'
         }
     } catch (error) {
-        fatSecretResults.value = []
-        fatSecretSearchError.value = error?.message || 'No se pudo consultar FatSecret.'
+        openFoodFactsResults.value = []
+        openFoodFactsSearchError.value = error?.message || 'No se pudo consultar la base de datos externa.'
     } finally {
-        isSearchingFatSecret.value = false
+        isSearchingOpenFoodFacts.value = false
     }
 }
 
 watch(searchQuery, () => {
     loadFoods()
+    openFoodFactsResults.value = []
+    openFoodFactsSearchError.value = ''
 })
 
 onMounted(() => {
@@ -373,22 +397,23 @@ const savePlan = () => console.log('Guardado:', meals.value)
                             <p class="text-xs text-on-surface-variant">
                                 Catálogo local{{ searchQuery ? ` para "${searchQuery}"` : '' }}
                             </p>
-                            <button
-                                v-if="searchQuery.length >= 2"
-                                @click="searchInFatSecret"
-                                :disabled="isSearchingFatSecret"
-                                class="text-xs py-2 px-3 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all font-semibold disabled:opacity-50"
-                            >
-                                {{ isSearchingFatSecret ? 'Buscando FatSecret...' : 'Buscar en FatSecret' }}
-                            </button>
+                            <div v-if="searchQuery.length >= 2" class="flex items-center gap-2">
+                                <button
+                                    @click="searchInOpenFoodFactsMexico"
+                                    :disabled="isSearchingOpenFoodFacts"
+                                    class="text-xs py-2 px-3 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-all font-semibold disabled:opacity-50"
+                                >
+                                    {{ isSearchingOpenFoodFacts ? 'Buscando en USDA...' : 'Buscar en USDA' }}
+                                </button>
+                            </div>
                         </div>
 
                         <div v-if="localSearchError" class="mb-3 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                             {{ localSearchError }}
                         </div>
 
-                        <div v-if="fatSecretSearchError" class="mb-3 rounded-lg border border-red-300/60 bg-red-50 px-3 py-2 text-xs text-red-700">
-                            {{ fatSecretSearchError }}
+                        <div v-if="openFoodFactsSearchError" class="mb-3 rounded-lg border border-emerald-300/60 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                            {{ openFoodFactsSearchError }}
                         </div>
 
                         <div class="flex-1 overflow-y-auto space-y-3 pr-2">
@@ -428,13 +453,13 @@ const savePlan = () => console.log('Guardado:', meals.value)
                                 </div>
                             </div>
 
-                            <div v-if="fatSecretResults.length" class="pt-3 mt-4 border-t border-outline-variant/20">
-                                <p class="text-xs font-semibold text-on-surface-variant mb-2">Sugerencias FatSecret (externas)</p>
+                            <div v-if="openFoodFactsResults.length" class="pt-3 mt-4 border-t border-outline-variant/20">
+                                <p class="text-xs font-semibold text-on-surface-variant mb-2">Resultados USDA FoodData Central (externos)</p>
 
                                 <div
-                                    v-for="food in fatSecretResults"
-                                    :key="`fatsecret-${food.id || food.external_id}`"
-                                    class="p-3 mb-2 bg-primary/5 rounded-lg border border-primary/15"
+                                    v-for="food in openFoodFactsResults"
+                                    :key="`off-${food.id || food.external_id}`"
+                                    class="p-3 mb-2 bg-emerald-50 rounded-lg border border-emerald-200"
                                 >
                                     <div class="flex items-start justify-between gap-3">
                                         <div>
@@ -449,17 +474,17 @@ const savePlan = () => console.log('Guardado:', meals.value)
                             </div>
 
                             <div class="mt-4 p-3 rounded-lg bg-surface-container-low border border-outline-variant/25 text-xs text-on-surface-variant">
-                                <p class="font-semibold text-on-surface mb-1">Fuente externa: FatSecret</p>
+                                <p class="font-semibold text-on-surface mb-1">Fuente externa: USDA FoodData Central</p>
                                 <p>Estos resultados son solo de consulta y no se almacenan en la plataforma.</p>
                                 <p class="mt-1">
                                     Revisa terminos en
                                     <a
-                                        href="https://platform.fatsecret.com/terms"
+                                        href="https://www.ars.usda.gov/policies-and-links/"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         class="text-primary font-semibold hover:underline"
                                     >
-                                        FatSecret Terms of Use
+                                        USDA Terms of Use
                                     </a>
                                     .
                                 </p>
