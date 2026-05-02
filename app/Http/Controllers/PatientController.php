@@ -79,12 +79,14 @@ class PatientController extends Controller
         }
 
         $data = $request->validate([
-            'name'       => ['required', 'string', 'max:150'],
-            'email'      => ['required', 'email', 'max:255', 'unique:users,email'],
-            'phone'      => ['nullable', 'string', 'max:30'],
-            'birth_date' => ['nullable', 'date', 'before:today'],
-            'gender'     => ['nullable', 'in:male,female,other'],
-            'notes'      => ['nullable', 'string', 'max:2000'],
+            'name'            => ['required', 'string', 'max:150'],
+            'email'           => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone'           => ['nullable', 'string', 'max:30'],
+            'birth_date'      => ['nullable', 'date', 'before:today'],
+            'gender'          => ['nullable', 'in:male,female,other'],
+            'height'          => ['nullable', 'numeric', 'between:50,300'],
+            'current_weight'  => ['nullable', 'numeric', 'between:10,500'],
+            'notes'           => ['nullable', 'string', 'max:2000'],
         ]);
 
         // Separar nombre completo en first_name / last_name
@@ -115,6 +117,8 @@ class PatientController extends Controller
             PatientProfile::create([
                 'user_id'         => $user->id,
                 'nutritionist_id' => $request->user()->id,
+                'height'          => $data['height'] ?? null,
+                'current_weight'  => $data['current_weight'] ?? null,
                 'notes'           => $data['notes'] ?? null,
                 'status'          => 'active',
             ]);
@@ -175,6 +179,13 @@ class PatientController extends Controller
         // Edad
         $age = $user->birth_date ? $user->birth_date->diffInYears(now()) : null;
 
+        // Plan de alimentación activo
+        $activePlan = null;
+        if ($profile->active_nutrition_plan_id) {
+            $activePlan = [];
+            // TODO: Agregar datos del plan activo cuando esté disponible
+        }
+
         return Inertia::render('PatientRecord', [
             'patient' => [
                 'id'        => '#CS-' . str_pad($profile->id, 4, '0', STR_PAD_LEFT),
@@ -204,6 +215,85 @@ class PatientController extends Controller
             'trends'    => compact('weightDiff', 'bodyFatDiff', 'muscleDiff'),
             'timeline'  => $timeline,
             'chartData' => $chartData,
+            'activePlan' => $activePlan,
+        ]);
+    }
+
+    public function expedient(Request $request, int $id)
+    {
+        $profile = PatientProfile::with('user')
+            ->where('id', $id)
+            ->where('nutritionist_id', $request->user()->id)
+            ->firstOrFail();
+
+        $user = $profile->user;
+
+        // Obtener todas las consultas del paciente
+        $records = ConsultationRecord::where('patient_id', $user->id)
+            ->with('appointment')
+            ->orderByDesc('recorded_at')
+            ->get();
+
+        // Mapear las consultas al formato esperado por PatientExpedient.vue
+        $consultations = $records->map(fn($r) => [
+            'id'        => $r->id,
+            'date'      => $r->recorded_at->toIso8601String(), // ISO 8601 format
+            'type'      => $this->getConsultationType($r),
+            'topic'     => $r->appointment?->title ?? 'Consulta',
+            'summary'   => $r->appointment?->summary ?? 'Sin resumen disponible',
+            'completed' => $r->appointment?->status === 'completed' || true,
+        ]);
+
+        return Inertia::render('PatientExpedient', [
+            'patient' => [
+                'id'        => $profile->id,
+                'name'      => $user->full_name,
+                'email'     => $user->email,
+                'avatar'    => $user->avatar,
+            ],
+            'consultations' => $consultations,
+        ]);
+    }
+
+    /**
+     * Determinar el tipo de consulta basado en datos disponibles
+     */
+    private function getConsultationType(ConsultationRecord $record): string
+    {
+        // Si es la primera consulta del paciente
+        $isFirstConsultation = !ConsultationRecord::where('patient_id', $record->patient_id)
+            ->where('id', '<', $record->id)
+            ->exists();
+
+        if ($isFirstConsultation) {
+            return 'initial';
+        }
+
+        // Determinar por cambios significativos o si es ajuste
+        if ($record->appointment?->type === 'adjustment' || $record->appointment?->notes?->contains('ajuste')) {
+            return 'adjustment';
+        }
+
+        return 'followup'; // Por defecto es seguimiento
+    }
+
+    public function createPlan(Request $request, int $id)
+    {
+        $profile = PatientProfile::with('user')
+            ->where('id', $id)
+            ->where('nutritionist_id', $request->user()->id)
+            ->firstOrFail();
+
+        $user = $profile->user;
+
+        return Inertia::render('CreateNutritionPlan', [
+            'patient' => [
+                'id'        => $profile->id,
+                'name'      => $user->full_name,
+                'email'     => $user->email,
+                'avatar'    => $user->avatar,
+                'goal'      => $this->goalLabels[$profile->nutrition_goal] ?? 'Sin objetivo',
+            ],
         ]);
     }
 }

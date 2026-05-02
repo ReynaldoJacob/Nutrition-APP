@@ -5,12 +5,14 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\ContentManagerController;
+use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\NutritionPlanController;
 use App\Http\Controllers\PatientDashboardController;
 use App\Http\Controllers\Api\FoodCatalogController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PricingController;
+use App\Http\Controllers\RecipeController;
 use App\Models\Appointment;
 use App\Models\PatientProfile;
 use Illuminate\Support\Facades\Route;
@@ -113,6 +115,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/pacientes', [PatientController::class, 'index'])->name('pacientes');
     Route::post('/pacientes', [PatientController::class, 'store'])->name('pacientes.store');
     Route::get('/pacientes/{id}', [PatientController::class, 'show'])->name('pacientes.show');
+    Route::get('/pacientes/{id}/expedient', [PatientController::class, 'expedient'])->name('pacientes.expedient');
+    Route::get('/pacientes/{id}/plan/create', [PatientController::class, 'createPlan'])->name('pacientes.plan.create');
 
     Route::get('/calendario', function () {
         $nutritionistId = auth()->id();
@@ -192,6 +196,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/planes-alimenticios', [NutritionPlanController::class, 'store'])->name('nutrition-plans.store');
     Route::patch('/planes-alimenticios/{id}', [NutritionPlanController::class, 'update'])->name('nutrition-plans.update');
     Route::delete('/planes-alimenticios/{id}', [NutritionPlanController::class, 'destroy'])->name('nutrition-plans.destroy');
+
+    // Rutas de Biblioteca (Recetas e Ingredientes)
+    Route::prefix('biblioteca')->name('')->group(function () {
+        Route::resource('recipes', RecipeController::class)->except('edit', 'update', 'destroy');
+        Route::get('/recipes/{recipe}/edit', [RecipeController::class, 'edit'])->name('recipes.edit');
+        Route::patch('/recipes/{recipe}', [RecipeController::class, 'update'])->name('recipes.update');
+        Route::delete('/recipes/{recipe}', [RecipeController::class, 'destroy'])->name('recipes.destroy');
+
+        Route::resource('ingredients', IngredientController::class)->except('show');
+    });
 
     Route::patch('/notificaciones/vistas', [NotificationController::class, 'markAsSeen'])->name('notifications.seen');
 

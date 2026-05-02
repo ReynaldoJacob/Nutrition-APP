@@ -140,7 +140,7 @@
                                             class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors"
                                         >
                                             <span class="material-symbols-outlined text-primary" style="font-size:18px">folder_open</span>
-                                            Ver Expediente
+                                            Ver paciente
                                         </Link>
                                     </div>
                                 </div>

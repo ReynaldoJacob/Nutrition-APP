@@ -130,6 +130,44 @@
                                     <p v-if="errors.gender" class="mt-1 text-xs text-error ml-1">{{ errors.gender }}</p>
                                 </div>
 
+                                <!-- Estatura (cm) -->
+                                <div>
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 ml-1">
+                                        Estatura
+                                    </label>
+                                    <div class="relative">
+                                        <input
+                                            v-model="form.height"
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="170"
+                                            class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                                            :class="{ 'ring-2 ring-error': errors.height }"
+                                        />
+                                        <span class="text-xs text-on-surface-variant absolute right-4 top-1/2 -translate-y-1/2 font-medium">cm</span>
+                                    </div>
+                                    <p v-if="errors.height" class="mt-1 text-xs text-error ml-1">{{ errors.height }}</p>
+                                </div>
+
+                                <!-- Peso Actual (kg) -->
+                                <div>
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 ml-1">
+                                        Peso Actual
+                                    </label>
+                                    <div class="relative">
+                                        <input
+                                            v-model="form.current_weight"
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="75"
+                                            class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                                            :class="{ 'ring-2 ring-error': errors.current_weight }"
+                                        />
+                                        <span class="text-xs text-on-surface-variant absolute right-4 top-1/2 -translate-y-1/2 font-medium">kg</span>
+                                    </div>
+                                    <p v-if="errors.current_weight" class="mt-1 text-xs text-error ml-1">{{ errors.current_weight }}</p>
+                                </div>
+
                                 <!-- Motivo Consulta -->
                                 <div class="col-span-2">
                                     <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 ml-1">
@@ -193,12 +231,14 @@ const loading = ref(false);
 const errors  = ref({});
 
 const initialForm = () => ({
-    name:       '',
-    email:      '',
-    phone:      '',
-    birth_date: '',
-    gender:     '',
-    notes:      '',
+    name:            '',
+    email:           '',
+    phone:           '',
+    birth_date:      '',
+    gender:          '',
+    height:          '',
+    current_weight:  '',
+    notes:           '',
 });
 
 const form = ref(initialForm());

@@ -21,20 +21,61 @@
                 </div>
             </div>
             <nav class="flex-1 px-4 space-y-2">
-                <Link
-                    v-for="item in navItems"
-                    :key="item.href"
-                    :href="item.href"
-                    :class="[
-                        'flex items-center gap-3 px-4 py-3 transition-colors duration-200',
-                        isActive(item.href)
-                            ? 'text-primary font-bold bg-primary/10 rounded-r-full'
-                            : 'text-slate-500 hover:text-primary hover:bg-primary/5',
-                    ]"
-                >
-                    <span class="material-symbols-outlined">{{ item.icon }}</span>
-                    <span class="font-headline text-sm">{{ item.label }}</span>
-                </Link>
+                <template v-for="item in navItems" :key="item.href || item.label">
+                    <!-- Regular Menu Item -->
+                    <Link
+                        v-if="!item.submenu"
+                        :href="item.href"
+                        :class="[
+                            'flex items-center gap-3 px-4 py-3 transition-colors duration-200',
+                            isActive(item.href)
+                                ? 'text-primary font-bold bg-primary/10 rounded-r-full'
+                                : 'text-slate-500 hover:text-primary hover:bg-primary/5',
+                        ]"
+                    >
+                        <span class="material-symbols-outlined">{{ item.icon }}</span>
+                        <span class="font-headline text-sm">{{ item.label }}</span>
+                    </Link>
+
+                    <!-- Menu Item with Submenu -->
+                    <div v-else class="space-y-1">
+                        <button
+                            @click="toggleSubmenu(item.label)"
+                            :class="[
+                                'w-full flex items-center justify-between px-4 py-3 transition-colors duration-200',
+                                isSubmenuActive(item)
+                                    ? 'text-primary font-bold bg-primary/10 rounded-r-full'
+                                    : 'text-slate-500 hover:text-primary hover:bg-primary/5',
+                            ]"
+                        >
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined">{{ item.icon }}</span>
+                                <span class="font-headline text-sm">{{ item.label }}</span>
+                            </div>
+                            <span
+                                class="material-symbols-outlined text-sm transition-transform duration-200"
+                                :style="{ transform: expandedMenus.has(item.label) ? 'rotate(180deg)' : 'rotate(0deg)' }"
+                            >
+                                keyboard_arrow_down
+                            </span>
+                        </button>
+                        <div v-if="expandedMenus.has(item.label)" class="pl-10 space-y-1">
+                            <Link
+                                v-for="subitem in item.submenu"
+                                :key="subitem.href"
+                                :href="subitem.href"
+                                :class="[
+                                    'flex items-center px-4 py-2 rounded-lg text-sm font-headline transition-colors duration-200',
+                                    isActive(subitem.href)
+                                        ? 'text-primary font-bold bg-primary/10 border-l-2 border-primary'
+                                        : 'text-slate-500 hover:text-primary hover:bg-primary/5 border-l-2 border-transparent',
+                                ]"
+                            >
+                                <span>{{ subitem.label }}</span>
+                            </Link>
+                        </div>
+                    </div>
+                </template>
             </nav>
             <div class="mt-auto px-6 py-4 flex flex-col gap-3">
                 <div class="flex items-center gap-3">
@@ -193,6 +234,7 @@ const isDark = ref(document.documentElement.classList.contains('dark'));
 const showNotifications = ref(false);
 const notificationItems = ref([]);
 const unreadCount = ref(0);
+const expandedMenus = ref(new Set()); // Los menús se expanden al hacer clic
 let notificationsChannel = null;
 let notificationAudioContext = null;
 
@@ -336,11 +378,30 @@ const navItems = computed(() => {
         { href: '/',                    icon: 'dashboard',       label: 'Dashboard' },
         { href: '/pacientes',           icon: 'group',           label: 'Pacientes' },
         { href: '/calendario',          icon: 'calendar_today',  label: 'Calendario' },
-        { href: '/planes-alimenticios', icon: 'restaurant_menu', label: 'Planes Alimenticios' },
+        {
+            icon: 'menu_book',
+            label: 'Biblioteca',
+            submenu: [
+                { href: '/biblioteca/recipes', label: 'Recetario' },
+                { href: '/biblioteca/ingredients', label: 'Mis Ingredientes' },
+            ],
+        },
         ...(isProPlan.value ? [{ href: '/gestor-de-contenido', icon: 'post_add', label: 'Gestor de Contenido' }] : []),
         { href: '/config',              icon: 'settings',        label: 'Configuración' },
     ];
 });
+
+function isSubmenuActive(item) {
+    return item.submenu?.some(sub => isActive(sub.href));
+}
+
+function toggleSubmenu(label) {
+    if (expandedMenus.value.has(label)) {
+        expandedMenus.value.delete(label);
+    } else {
+        expandedMenus.value.add(label);
+    }
+}
 
 function isActive(href) {
     if (href === '/') return currentUrl.value === '/';

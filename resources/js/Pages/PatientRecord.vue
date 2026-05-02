@@ -90,6 +90,59 @@
                         <p class="text-sm text-on-surface-variant leading-relaxed">{{ patient.notes }}</p>
                     </div>
 
+                    <!-- Plan de Alimentación Activo -->
+                    <div class="bg-primary-container/40 rounded-3xl p-6 relative overflow-hidden group">
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+                                <h3 class="font-bold text-on-primary-container">Plan de Alimentación Activo</h3>
+                            </div>
+                            <p class="text-xl font-extrabold text-primary-dim mb-4">{{ patient.activePlan?.name ?? 'Sin plan activo' }}</p>
+                            <div class="flex flex-col gap-2">
+                                <Link
+                                    v-if="patient.activePlan"
+                                    :href="route('planes.show', patient.activePlan.id)"
+                                    class="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline"
+                                >
+                                    Ver / Editar Plan
+                                    <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                                </Link>
+                                <Link
+                                    :href="route('pacientes.plan.create', patient.profileId)"
+                                    class="inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline"
+                                >
+                                    <span class="material-symbols-outlined text-xs">add</span>
+                                    Crear Nuevo Plan
+                                </Link>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined absolute -bottom-4 -right-4 text-9xl text-primary/10 rotate-12 group-hover:rotate-0 transition-transform duration-500">nutrition</span>
+                    </div>
+
+                    <!-- Ver Expediente Completo -->
+                    <div class="bg-surface-container-low rounded-3xl p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-on-surface">Archivos y Documentos</h3>
+                            <button class="text-primary text-sm font-bold hover:text-primary-dim transition-colors">+ Añadir</button>
+                        </div>
+                        <Link
+                            :href="route('pacientes.expedient', patient.profileId)"
+                            class="w-full py-3.5 px-4 bg-white border border-surface-container hover:border-primary/30 hover:bg-primary/[0.02] rounded-2xl text-sm transition-all duration-300 flex items-center group no-underline"
+                        >
+                            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mr-4 group-hover:scale-110 transition-transform duration-300">
+                                <span class="material-symbols-outlined text-xl">folder_open</span>
+                            </div>
+                            <div class="flex-1 text-left">
+                                <p class="font-bold text-on-surface leading-none mb-1">Ver Expediente Completo</p>
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Historial Médico Digital</p>
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <span class="text-primary font-extrabold text-base">{{ consultationCount }}</span>
+                                <span class="text-[9px] text-on-surface-variant uppercase font-bold tracking-tighter">Consultas</span>
+                            </div>
+                        </Link>
+                    </div>
+
                 </div>
 
                 <!-- ── Columna derecha ── -->
@@ -338,5 +391,9 @@ const chartSummary = computed(() => {
         title:    isPositive ? 'Tendencia favorable' : 'Tendencia desfavorable',
         subtitle: `Variación de ${diff > 0 ? '+' : ''}${diff.toFixed(1)}${unit} (${pct}%) en los últimos ${values.length} registros`,
     };
+});
+
+const consultationCount = computed(() => {
+    return props.timeline?.length ?? 0;
 });
 </script>
